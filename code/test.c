@@ -6,6 +6,7 @@ int main(void){
         printf(">> ");
         fgets(usrin, 20, stdin);
         printf("%lf\n", eval(usrin));
+        printf("%lf\n", evalF(usrin));
     }
     return 1;
 }

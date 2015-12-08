@@ -5,7 +5,7 @@ char *valids = "+-*/^.";
 void parse(char *str){
     int n, i, len = strlen(str);
     //order of operations-> compute () first
-    n = lastIndexOf(str, '(');
+    n = lastIndexOf(str, '(', 0);
         switch(str[n - 1]){
             case 's':
                 //cos
@@ -63,6 +63,48 @@ double eval(char str[200]){
     return result;
 }
 
+double evalF(char str[200]){
+    int j = 0, i = 0; double n, result;
+    char func[4], num[196], expr[196];
+    int a = firstIndexOf(str, '(', 0);
+    int b = firstIndexOf(str, ')', a);
+    int ex = isexpr(str, a + 1, b - 1);
+    while(str[i] != '('){
+        func[i] = str[i];
+        i++;
+    }
+    func[i] = '\0';
+    i++;
+    if(ex){
+        i = 0; j = 0;
+        for(i = a + 1; i < b; i++){
+            expr[j] = str[i];
+            j++;
+        }
+        expr[j] = '\0';
+        n = eval(expr);
+    }else{
+        while(isdigit(str[i]) || str[i] == '.'){
+            num[j] = str[i];
+            i++; j++;
+        }
+        num[j] = '\0';
+        n = str2dbl(num);
+    }
+    if(strcmp(func, "sin") == 0){
+        result = sin(n);
+    }else if(strcmp(func, "cos") == 0){
+        result = cos(n);
+    }else if(strcmp(func, "tan") == 0){
+        result = tan(n);
+    }else if(strcmp(func, "log") == 0){
+        result = log10(n);
+    }else if(strcmp(func, "ln") == 0){
+        result = log(n);
+    }
+    return result;
+}
+
 double str2dbl(char *str){
     int j = 0, i, n = firstIndexOf(str, '.', 0), neg = 0;
     double result = 0;
@@ -95,13 +137,15 @@ int isexpr(char *str, int start, int end){
     int i = start, result = 1, decs = 0;
     while((isdigit(str[i]) || str[i] == '.') && i < end){
         if(str[i] == '.') decs++;
-        if(!isdigit(str[i + 1] && !isvalidchar(str[i + 1]))) result = 0;
+        if(!(isdigit(str[i + 1]) || isvalidchar(str[i + 1])))
+            result = 0;
         i++;
     }
     i++;
     while((isdigit(str[i]) || str[i] == '.') && i < end){
         if(str[i] == '.') decs++;
-        if(!isdigit(str[i + 1] && !isvalidchar(str[i + 1]))) result = 0;
+        if(!isdigit(str[i + 1]) && !isvalidchar(str[i + 1]))
+            result = 0;
         i++;
     }
     if(decs > 2) result = 0;
@@ -110,14 +154,15 @@ int isexpr(char *str, int start, int end){
 
 int isvalidchar(char c){
     int i, match = 0;
-    for(i = 0; i < strlen(valids); i++)
+    for(i = 0; i < strlen(valids); i++){
         if(c == valids[i]) match = 1;
+    }
     return match;
 }
 
-int lastIndexOf(char *str, char target){
+int lastIndexOf(char *str, char target, int start){
     int i = strlen(str);
-    for(i = i - 1; i >= 0; i--)
+    for(i = i - 1; i >= start; i--)
         if(str[i] == target) return i;
     return -1;
 }

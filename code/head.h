@@ -12,9 +12,10 @@ typedef struct Expression_s{
 extern char *valids;
 
 void parse(char *);
-int lastIndexOf(char *, char);
+int lastIndexOf(char *, char, int);
 int firstIndexOf(char *, char, int);
 double eval(char str[200]);
 double str2dbl(char *);
 int isexpr(char *, int, int);
 int isvalidchar(char);
+double evalF(char *);
