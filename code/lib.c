@@ -41,22 +41,26 @@ double eval(char *str){
 }
 
 double str2dbl(char *str){
-    int j = 0, i, n, dec = firstIndexOf(str, '.', 0);
+    int j = 0, i, n = firstIndexOf(str, '.', 0);
     double result = 0;
-    if(dec = -1){
+    if(n == -1){
         n = strlen(str);
         for(i = n - 1; i >= 0; i--){
             result += pow(10, i) * (str[j] - 48);
             j++;
         }
     }else{
-        for(i = n - 1; i >= 0; i--){
-            result += pow(10, i) * (str[j] - 48);
-            j++;
+        j = n - 1;
+        for(i = 0; i < n; i++){
+            result += pow(10, j) * (str[i] - 48);
+            printf("ln56[%d]: %lf\n", i, result);
+            j--;
         }
-        j++;
-        for(i = 1; i < strlen(str) - n; i++){
-            result += pow(10, -i) * (str[j] - 48);
+        i++; j = -1;
+        for(i = i; i < strlen(str); i++){
+            result += pow(10, j) * (str[i] - 48);
+            printf("ln56[%d]: %lf\n", i, result);
+            j--;
         }
     }
     return result;
