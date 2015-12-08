@@ -49,7 +49,17 @@ double str2dbl(char *str){
             result += pow(10, i) * (str[j] - 48);
             j++;
         }
+    }else{
+        for(i = n - 1; i >= 0; i--){
+            result += pow(10, i) * (str[j] - 48);
+            j++;
+        }
+        j++;
+        for(i = 1; i < strlen(str) - n; i++){
+            result += pow(10, -i) * (str[j] - 48);
+        }
     }
+    return result;
 }
 
 int lastIndexOf(char *str, char target){
