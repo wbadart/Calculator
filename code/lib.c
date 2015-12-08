@@ -152,6 +152,10 @@ int isexpr(char *str, int start, int end){
     return result;
 }
 
+int iscompexpr(char *str, int start, int end){
+    int i = start, result = 1;
+}
+
 int isvalidchar(char c){
     int i, match = 0;
     for(i = 0; i < strlen(valids); i++){
