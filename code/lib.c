@@ -1,6 +1,7 @@
 #include "head.h"
 
 char *valids = "+-*/^.";
+char *ops = "+-*/^";
 
 void parse(char *str){
     int n, i, len = strlen(str);
@@ -152,8 +153,75 @@ int isexpr(char *str, int start, int end){
     return result;
 }
 
-int iscompexpr(char *str, int start, int end){
-    int i = start, result = 1;
+double evalMexp(char str[200]){
+    double result = 0;
+    int i, n = countops(str, strlen(str));
+    int j = firstIndexOf(str, '*', 0);
+    int a, b;
+    int mults = countchar(str, '*'),
+        divs = countchar(str, '/'),
+        plus = countchar(str, '+'),
+        mins = countchar(str, '-');
+    
+    for(i = 0; i < mults; i++){
+        a = leftNumIndex(str, j);
+        b = rightNumIndex(str, j);
+        result += evalChunk(str, a, b);
+        j = firstIndexOf(str, '*', j);
+    }
+
+    return result;
+}
+
+double evalChunk(char str[200], int start, int end){
+    char exprstr[200];
+    int i = start, j = 0;
+    for(i = i; i <= end; i++){
+        exprstr[j] = str[i];
+        j++;
+    }
+    exprstr[j] = '\0';
+    return eval(exprstr);
+}
+
+int countchar(char str[200], char c){
+    int i = strlen(str), result = 0;
+    for(i = i; i >= 0; i--){
+        if(str[i] == c) result++;
+    }
+    return result;
+}
+
+int countops(char str[200], int n){
+    int i, j, result = 0;
+    for(i = 0; i < 5; i++){
+        for(j = 0; j < n; j++){
+            if(ops[i] == str[j]) result++;
+        }
+    }
+    return result;
+}
+
+int leftNumIndex(char str[200], int start){
+    int i = start - 1;
+    while(isnumchar(str[i])){
+        i--;
+    }
+    return i + 1;
+}
+
+int rightNumIndex(char str[200], int start){
+    int i = start + 1;
+    while(isnumchar(str[i])){
+        i++;
+    }
+    return i - 1;
+}
+
+int isnumchar(char c){
+    if(!isdigit(c) && c != '.')
+        return 0;
+    return 1;
 }
 
 int isvalidchar(char c){
