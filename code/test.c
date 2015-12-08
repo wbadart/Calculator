@@ -1,6 +1,11 @@
 #include "head.h"
 
 int main(void){
-    printf("\n%lf\n", str2dbl("231.12"));
+    char usrin[20];
+    while(usrin[0] != 'q'){
+        printf(">> ");
+        fgets(usrin, 20, stdin);
+        printf("%lf\n", eval(usrin));
+    }
     return 1;
 }

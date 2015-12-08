@@ -23,11 +23,11 @@ void parse(char *str){
     }
 }
 
-double eval(char *str){
+double eval(char str[200]){
     int j = 0, i = 0;
     char operand_a[100], operand_b[100], op;
-    double a, b;
-    while(isdigit(str[i]) || str[i] != '.'){
+    double a, b, result;
+    while(isdigit(str[i]) || str[i] == '.'){
         operand_a[i] = str[i];
         i++;
     }
@@ -35,13 +35,30 @@ double eval(char *str){
     a = str2dbl(operand_a);
     op = str[i];
     i++;
-    while(isdigit(str[i]) || str[i] != '.'){
+    while(isdigit(str[i]) || str[i] == '.'){
         operand_b[j] = str[i];
         i++; j++;
     }
     operand_b[j] = '\0';
     b = str2dbl(operand_b);
-    printf("%lf %c %lf\n", a, op, b);
+    switch(op){
+        case '+':
+            result = a + b;
+            break;
+        case '-':
+            result = a - b;
+            break;
+        case '*':
+            result = a * b;
+            break;
+        case '/':
+            result = a / b;
+            break;
+        case '^':
+            result = pow(a, b);
+            break;
+    }
+    return result;
 }
 
 double str2dbl(char *str){
