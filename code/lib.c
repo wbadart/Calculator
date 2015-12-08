@@ -53,13 +53,11 @@ double str2dbl(char *str){
         j = n - 1;
         for(i = 0; i < n; i++){
             result += pow(10, j) * (str[i] - 48);
-            printf("ln56[%d]: %lf\n", i, result);
             j--;
         }
         i++; j = -1;
         for(i = i; i < strlen(str); i++){
             result += pow(10, j) * (str[i] - 48);
-            printf("ln56[%d]: %lf\n", i, result);
             j--;
         }
     }
