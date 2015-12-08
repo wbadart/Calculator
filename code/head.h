@@ -1,3 +1,7 @@
 #include <stdio.h>
+#include <math.h>
+#include <string.h>
+#include <ctype.h>
 
-void test(void);
+void parse(char *);
+int lastIndexOf(char *, char);
