@@ -33,6 +33,8 @@ void setupEx(Expression *);
 double eval(Expression *, int startcol, int endcol);
 //evaluates the part of an expression on either side of operator at column col
 double evalOp(Expression *, int col);
+//evaluates the part of an expression to the right of the func at col
+double evalFunc(Expression *, int col);
 //shifts the columns of an expression by writing over fully null columns
 void shiftLeft(Expression *);
 //determines if expression has any parens left
@@ -56,3 +58,5 @@ void nullifycol(Expression *, int);
 void updateParts(Expression *);
 //count remaining operators
 int countOps(Expression *, int start, int end);
+//counts the functions present in the given range
+int countFuncs(Expression *, int start, int end);

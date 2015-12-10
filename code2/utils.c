@@ -5,29 +5,19 @@
 
 char operators[] = "^*/+-%";
 
-void updateParts(Expression *ex){
-    int i = 0;
-    while(!isNullCol(ex, i)) i++;
-    ex->parts = i - 1;
-}
+/*=====Evaluation========================*/
 
-int countOps(Expression *target, int start, int end){
-    int i, result = 0;
-    for(i = start; i <= end; i++){
-        if(target->ops[i] != NULL_CHAR) result++;
-    }
+double evalFunc(Expression *ex, int col){
+    double result = NULL_DOUBLE;
+    if(strcmp(ex->funcs[col], "sin") == 0)
+        result = sin(ex->nums[col+2]);
+    else if(strcmp(ex->funcs[col], "cos") == 0)
+        result = cos(ex->nums[col+2]);
+    else if(strcmp(ex->funcs[col], "tan") == 0)
+        result = tan(ex->nums[col+2]);
+    else if(strcmp(ex->funcs[col], "log") == 0)
+        result = log10(ex->nums[col+2]);
     return result;
-}
-
-char highestOp(Expression *ex, int start, int end){
-    int i, j;
-    //printf("lib.c:83 searching (%d, %d)\n", start, end);
-    for(i = 0; i < strlen(operators); i++){ //operators is in order of op. so we start @ 0
-        for(j = start; j <= end; j++){
-            if(operators[i] == ex->ops[j]) return ex->ops[j];
-        }
-    }
-    return NULL_CHAR;   //if not found, return null_char
 }
 
 double evalOp(Expression *target, int col){
@@ -55,6 +45,10 @@ double evalOp(Expression *target, int col){
             break;
     }
 }
+
+/*========================================*/
+
+/*=====Indexing and Location==============*/
 
 int firstOpInRange(Expression *target, char op, int start, int end){
     int i; char alt;
@@ -90,6 +84,38 @@ int lastParen(Expression *target, char c){
     return -1;
 }
 
+int countOps(Expression *target, int start, int end){
+    int i, result = 0;
+    for(i = start; i <= end; i++){
+        if(target->ops[i] != NULL_CHAR) result++;
+    }
+    return result;
+}
+
+int coutFuncs(Expression *ex, int start, int end){
+    int i, result = 0;
+    for(i = start; i <= end; i++){
+        if(strcmp(ex->funcs[i], NULL_STR) != 0)
+            result++;
+    }
+    return result;
+}
+
+char highestOp(Expression *ex, int start, int end){
+    int i, j;
+    //printf("lib.c:83 searching (%d, %d)\n", start, end);
+    for(i = 0; i < strlen(operators); i++){ //operators is in order of op. so we start @ 0
+        for(j = start; j <= end; j++){
+            if(operators[i] == ex->ops[j]) return ex->ops[j];
+        }
+    }
+    return NULL_CHAR;   //if not found, return null_char
+}
+
+/*==========================================*/
+
+/*=====Boolean functions====================*/
+
 int isoperator(char c){
     int i = strlen(operators);
     for(i = i - 1; i >= 0; i--){
@@ -97,6 +123,29 @@ int isoperator(char c){
     }
     return 0;
 }
+
+int hasparens(Expression *target, int start, int end){
+    int i, result = 0;
+    for(i = start; i <= end; i++){
+        if(target->parens[i] != NULL_CHAR){
+            result++;    //count parens found in expression
+        }
+    }
+    return result;
+}
+
+int isNullCol(Expression *target, int col){
+    if(strcmp(target->funcs[col], NULL_STR) == 0 && //compare all rows to respective null val
+       target->ops[col] == NULL_CHAR &&
+       target->parens[col] == NULL_CHAR &&
+       target->nums[col] == NULL_DOUBLE
+    ) return 1;
+    return 0;
+}
+
+/*===========================================*/
+
+/*=====Expression struct Utilities===========*/
 
 void cpycol(Expression *ex, int dest, int source){
     ex->nums[dest] = ex->nums[source];
@@ -112,11 +161,33 @@ void nullifycol(Expression *ex, int i){
     strcpy(ex->funcs[i], NULL_STR);
 }
 
-void getInput(char *target){
-    printf(">> ");
-    fgets(target, 256, stdin);
-    target[strlen(target) - 1] = '\0';  //remove the newline from the input
+void updateParts(Expression *ex){
+    int i = 0;
+    while(!isNullCol(ex, i)) i++;
+    ex->parts = i - 1;
 }
+
+void shiftLeft(Expression *ex){ //by shifting content left, this func puts null cols @ end
+    int i, nullfound = 0;
+    if(isNullCol(ex, ex->parts)) ex->parts--;   //lose a col if the last one's null
+    for(i = ex->parts; i >= 0; i--){    //loop until you find null col or get to start
+        if(isNullCol(ex, i)){
+            nullfound = 1;
+            break;
+        }
+    }
+    if(nullfound){      //if you found a null col, move the col to the right into it
+        if(i != ex->parts){
+            cpycol(ex, i, i + 1);
+            nullifycol(ex, i + 1);
+        }
+        shiftLeft(ex);
+    }else return;   //repeat until no null cols
+}
+
+/*==============================================*/
+
+/*=====String parsing===========================*/
 
 double str2dbl(char *str){
     int j = 0, i, n = firstIndexOf('.', str), neg = 0; //start str iter. @ 0, find decimal
@@ -194,22 +265,25 @@ void parse(char *source, Expression *target){
     nullifycol(target, k);
 }
 
-void shiftLeft(Expression *ex){ //by shifting content left, this func puts null cols @ end
-    int i, nullfound = 0;
-    if(isNullCol(ex, ex->parts)) ex->parts--;   //lose a col if the last one's null
-    for(i = ex->parts; i >= 0; i--){    //loop until you find null col or get to start
-        if(isNullCol(ex, i)){
-            nullfound = 1;
-            break;
-        }
-    }
-    if(nullfound){      //if you found a null col, move the col to the right into it
-        if(i != ex->parts){
-            cpycol(ex, i, i + 1);
-            nullifycol(ex, i + 1);
-        }
-        shiftLeft(ex);
-    }else return;   //repeat until no null cols
+void setupEx(Expression *target){       //this is needed for the base case of recusive evaluation
+    strcpy(target->funcs[0], NULL_STR);
+    strcpy(target->funcs[1], NULL_STR);
+    target->ops[0] = NULL_CHAR;
+    target->ops[1] = NULL_CHAR;
+    target->parens[0] = NULL_CHAR;
+    target->parens[1] = NULL_CHAR;
+    target->nums[0] = NULL_DOUBLE;
+    target->nums[1] = NULL_DOUBLE;
+}
+
+/*============================================*/
+
+/*=====I/O Functions==========================*/
+
+void getInput(char *target){
+    printf(">> ");
+    fgets(target, 256, stdin);
+    target[strlen(target) - 1] = '\0';  //remove the newline from the input
 }
 
 void printEx(Expression *target){
@@ -243,33 +317,4 @@ void printAsGrid(Expression *ex, char *prog, int ln){
     printf("==================================================\n\n");
 }
 
-void setupEx(Expression *target){       //this is needed for the base case of recusive evaluation
-    strcpy(target->funcs[0], NULL_STR);
-    strcpy(target->funcs[1], NULL_STR);
-    target->ops[0] = NULL_CHAR;
-    target->ops[1] = NULL_CHAR;
-    target->parens[0] = NULL_CHAR;
-    target->parens[1] = NULL_CHAR;
-    target->nums[0] = NULL_DOUBLE;
-    target->nums[1] = NULL_DOUBLE;
-}
-
-int hasparens(Expression *target, int start, int end){
-    int i, result = 0;
-    for(i = start; i <= end; i++){
-        //printf("lib.c:301[hasparens] current parenchar:%c\n", target->parens[i]);
-        if(target->parens[i] != NULL_CHAR){
-            result++;    //count parens found in expression
-        }
-    }
-    return result;
-}
-
-int isNullCol(Expression *target, int col){
-    if(strcmp(target->funcs[col], NULL_STR) == 0 && //compare all rows to respective null val
-       target->ops[col] == NULL_CHAR &&
-       target->parens[col] == NULL_CHAR &&
-       target->nums[col] == NULL_DOUBLE
-    ) return 1;
-    return 0;
-}
+/*============================================*/
