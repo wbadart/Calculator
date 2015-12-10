@@ -11,8 +11,10 @@ double eval(Expression *target, int startcol, int endcol){
     //check 1: is there only one number left?
     if(isNullCol(target, 1) && target->nums[0] != NULL_DOUBLE) return target->nums[0];
     //next: evaluate parens
-    printf("this expression has %d parens\n", hasparens(target, startcol, endcol));
-    if(hasparens(target, startcol, endcol) > 0){
+    n = hasparens(target, startcol, endcol);
+    printf("n=%d\n", n);
+    //for some reason, this check is being passed even when n = 0?
+    if(n > 0){
         j = lastParen(target, '(');
         k = firstParen(target, ')');
         if(highestOp(target, j, k) != NULL_CHAR) eval(target, j + 1, k - 1);
@@ -67,71 +69,63 @@ double evalOp(Expression *target, int col){
     }
 }
 
-void shiftLeft(Expression *ex){
+void shiftLeft(Expression *ex){ //by shifting content left, this func puts null cols @ end
     int i, nullfound = 0;
-    if(isNullCol(ex, ex->parts)) ex->parts--;
-    for(i = ex->parts; i >= 0; i--){
+    if(isNullCol(ex, ex->parts)) ex->parts--;   //lose a col if the last one's null
+    for(i = ex->parts; i >= 0; i--){    //loop until you find null col or get to start
         if(isNullCol(ex, i)){
             nullfound = 1;
             break;
         }
     }
-    if(nullfound){
+    if(nullfound){      //if you found a null col, move the col to the right into it
         if(i != ex->parts){
             cpycol(ex, i, i + 1);
             nullifycol(ex, i + 1);
         }
         shiftLeft(ex);
-    }else return;
+    }else return;   //repeat until no null cols
 }
 
 void parse(char *source, Expression *target){
     int i = 0, k = 0, j = 0;
     char tmpstr[256];
-    while(source[i] != '\0'){
-        if(isalpha(source[i])){
-            strncpy(target->funcs[k], &source[i], 3);
-            target->funcs[k][3] = '\0';
-            target->nums[k] = NULL_DOUBLE;
-            target->ops[k] = NULL_CHAR;
-            target->parens[k] = NULL_CHAR;
-            target->parts = k;
+    while(source[i] != '\0'){       //until you reach the end of the string...
+        if(isalpha(source[i])){                     //if it's a letter, then we have a func
+            nullifycol(target, k);                      //start with a blank slate
+            strncpy(target->funcs[k], &source[i], 3);   //for now, we're dealing w/ 3 letter funcs
+            target->funcs[k][3] = '\0';                 //add delimiting character
+            target->parts = k;                          //log that you've added a col
             k++;
-            i += 3;
+            i += 3;                                     //we already have these logged
             continue;
         }
-        if(source[i] == '(' || source[i] == ')'){
-            target->parens[k] = source[i];
-            strcpy(target->funcs[k], NULL_STR);
-            target->nums[k] = NULL_DOUBLE;
-            target->ops[k] = NULL_CHAR;
+        if(source[i] == '(' || source[i] == ')'){   //if it's a paren, then the it's a paren
+            nullifycol(target, k);
+            target->parens[k] = source[i];              
             target->parts = k;
             k++;
-            i++;
+            i++;                                        //here, we only need to advance 1 char
             continue;
         }
         if(isoperator(source[i]) && (isdigit(source[i - 1]) || source[i - 1] == ')')){
-            target->ops[k] = source[i];
-            strcpy(target->funcs[k], NULL_STR);
-            target->nums[k] = NULL_DOUBLE;
-            target->parens[k] = NULL_CHAR;
+            nullifycol(target, k);
+            target->ops[k] = source[i];                 //tracking operators
             target->parts = k;
             k++;
             i++;
             continue;
         }
-        if(isdigit(source[i]) || source[i] == '-'){
+        if(isdigit(source[i]) || source[i] == '-'){ //finally, digit chars mean it's a number
             j = 0;
-            if(source[i] == '-') tmpstr[j++] = '-';
+            if(source[i] == '-') tmpstr[j++] = '-'; //if it's negative, make a note
             while(isdigit(source[i + j]) || source[i + j] == '.'){
-                tmpstr[j] = source[i + j];
+                tmpstr[j] = source[i + j];          //add chars to tmpstr until it's non-num
                 j++;
             }
             tmpstr[j] = '\0';
+            nullifycol(target, k);
             target->nums[k] = str2dbl(tmpstr);
-            strcpy(target->funcs[k], NULL_STR);
-            target->ops[k] = NULL_CHAR;
-            target->parens[k] = NULL_CHAR;
             target->parts = k;
             k++;
             i += j;
@@ -181,7 +175,7 @@ void printAsGrid(Expression *ex){
     }
 }
 
-void setupEx(Expression *target){
+void setupEx(Expression *target){       //this is needed for the base case of recusive evaluation
     strcpy(target->funcs[0], NULL_STR);
     strcpy(target->funcs[1], NULL_STR);
     target->ops[0] = NULL_CHAR;
@@ -195,58 +189,57 @@ void setupEx(Expression *target){
 void getInput(char *target){
     printf(">> ");
     fgets(target, 256, stdin);
-    //remove newline from input string:
-    target[strlen(target) - 1] = '\0';
+    target[strlen(target) - 1] = '\0';  //remove the newline from the input
 }
 
 double str2dbl(char *str){
-    int j = 0, i, n = firstIndexOf('.', str), neg = 0;
+    int j = 0, i, n = firstIndexOf('.', str), neg = 0; //start str iter. @ 0, find decimal
     double result = 0;
-    if(str[0] == '-'){
+    if(str[0] == '-'){  //if num is negative, j=1 to skip the dash
         neg = 1; j = 1;
     }
-    if(n == -1){
-        n = strlen(str);
+    if(n == -1){    //if it's an integer...
+        n = strlen(str);    //start @ highest place and work to units (i.e. n*(10^0))
         for(i = n - 1 - neg; i >= 0; i--){
-            result += pow(10, i) * (str[j] - 48);
+            result += pow(10, i) * (str[j] - 48);   //-48 b/c ascii->int
             j++;
         }
-    }else{
-        j = n - 1 - neg;
-        for(i = neg?1:0; i < n; i++){
+    }else{          //if it has a decimal point...
+        j = n - 1 - neg;//left-most pwr of 10, eg -23.2: str[3]='.', neg=1->str[3-1-1]=2
+        for(i = neg?1:0; i < n; i++){   //if neg, skip dash
             result += pow(10, j) * (str[i] - 48);
             j--;
         }
-        i++; j = -1;
+        i++; j = -1;    //j=-1 b/c now it's decimal (i.e negative powers of 10)
         for(i = i; i < strlen(str); i++){
             result += pow(10, j) * (str[i] - 48);
             j--;
         }
     }
-    if(neg) result *= -1;
+    if(neg) result *= -1;   //up til now, result has been positive
     return result;
 }
 
 char highestOp(Expression *ex, int start, int end){
     int i, j;
-    for(i = 0; i < strlen(operators); i++){
+    for(i = 0; i < strlen(operators); i++){ //operators is in order of op. so we start @ 0
         for(j = start; j <= end; j++){
             if(operators[i] == ex->ops[j]) return ex->ops[j];
         }
     }
-    return NULL_CHAR;
+    return NULL_CHAR;   //if not found, return null_char
 }
 
 int hasparens(Expression *target, int start, int end){
     int i, result = 0;
     for(i = start; i <= end; i++){
-        if(target->parens[i] != NULL_CHAR) result++;
+        if(target->parens[i] != NULL_CHAR) result++;    //coutn parens found in expression
     }
     return result;
 }
 
 int isNullCol(Expression *target, int col){
-    if(strcmp(target->funcs[col], NULL_STR) == 0 &&
+    if(strcmp(target->funcs[col], NULL_STR) == 0 && //compare all rows to respective null val
        target->ops[col] == NULL_CHAR &&
        target->parens[col] == NULL_CHAR &&
        target->nums[col] == NULL_DOUBLE
@@ -256,7 +249,7 @@ int isNullCol(Expression *target, int col){
 
 int firstOpInRange(Expression *target, char op, int start, int end){
     int i; char alt;
-    if(op == '*' || op == '/') alt = op=='*'?'/':'*';
+    if(op == '*' || op == '/') alt = op=='*'?'/':'*';   //set alt b/c mult/div & +/- have same order
     else if(op == '+' || op == '-') alt = op=='+'?'-':'+';
     for(i = start; i <= end; i++){
         if(target->ops[i] == op || target->ops[i] == alt) return i;
