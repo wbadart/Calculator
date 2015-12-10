@@ -3,6 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 
+extern char operators[];
+
 //structure which holds expression data.
 //each "column" only contains 1 item, e.g. if nums[2]==3.14, ops[2]==NULL_CHAR
 typedef struct Expression_s{
@@ -44,9 +46,13 @@ int firstOpInRange(Expression *, char op, int start, int end);
 int isNullCol(Expression *, int col);
 //returns the highest order operator in an expression in a range of columns
 char highestOp(Expression *, int start, int end);
-//prints expression as grid
-void printAsGrid(Expression *);
+//prints expression as grid. the pass the line called as int
+void printAsGrid(Expression *, char *, int);
 //copies the data from the source column to the destination within an expression
 void cpycol(Expression *, int dest, int source);
 //nullifies a column
 void nullifycol(Expression *, int);
+//updates the number of columns recoreded in "parts"
+void updateParts(Expression *);
+//count remaining operators
+int countOps(Expression *, int start, int end);
