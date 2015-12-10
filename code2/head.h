@@ -42,3 +42,11 @@ int lastParen(Expression *, char);
 int firstOpInRange(Expression *, char op, int start, int end);
 //determines if a specified column only has null values
 int isNullCol(Expression *, int col);
+//returns the highest order operator in an expression in a range of columns
+char highestOp(Expression *, int start, int end);
+//prints expression as grid
+void printAsGrid(Expression *);
+//copies the data from the source column to the destination within an expression
+void cpycol(Expression *, int dest, int source);
+//nullifies a column
+void nullifycol(Expression *, int);

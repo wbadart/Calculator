@@ -6,10 +6,7 @@ COMP = gcc
 FLAGS = -lm
 
 exec: $(MAIN).o $(LIB).o
-	$(COMP) object_$(MAIN).o object_$(LIB).o $(FLAGS);
-	echo
-	./a.out sin\(-23/3.02\);
-	
+	$(COMP) object_$(MAIN).o object_$(LIB).o $(FLAGS);	
 
 $(MAIN).o: $(MAIN).$(EXT) $(HEAD).h
 	$(COMP) $(MAIN).$(EXT) -c -o object_$(MAIN).o

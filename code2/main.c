@@ -9,10 +9,10 @@ int main(int argc, char *argv[]){
         printf(">== %lf\n", eval(pe, 0, pe->parts));
     }
     else{
-        while(str[0] != 'q'){
+        while(1){
             getInput(str);
+            if(str[0] == 'q') break;
             parse(str, pe);
-            printEx(pe);
             printf("%lf\n\n", eval(pe, 0, pe->parts));
         }
     }

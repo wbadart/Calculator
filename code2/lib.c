@@ -8,42 +8,40 @@ char operators[] = "^*/+-%";
 double eval(Expression *target, int startcol, int endcol){
     int i, n, j, k;
     double result;
-    printf("evaluating: ");
-    printEx(target);
     //check 1: is there only one number left?
-    if(strcmp(target->funcs[1], NULL_STR) &&
-       target->ops[1] == NULL_CHAR &&
-       target->nums[1] == NULL_DOUBLE &&
-       target->parens[1] == NULL_CHAR &&
-       strcmp(target->funcs[0], NULL_STR) &&
-       target->ops[0] == NULL_CHAR &&
-       target->parens[0] == NULL_CHAR
-    ) return target->nums[0];
+    if(isNullCol(target, 1) && target->nums[0] != NULL_DOUBLE) return target->nums[0];
     //next: evaluate parens
-    if(hasparens(target, startcol, endcol)){
+    printf("this expression has %d parens\n", hasparens(target, startcol, endcol));
+    if(hasparens(target, startcol, endcol) > 0){
         j = lastParen(target, '(');
         k = firstParen(target, ')');
-        eval(target, j + 1, k - 1);
+        if(highestOp(target, j, k) != NULL_CHAR) eval(target, j + 1, k - 1);
+        printf("j: %d, k: %d\n", j, k);
+        printf("before column nulls\n");
+        printAsGrid(target);
+        getchar();
+        nullifycol(target, j);
+        nullifycol(target, k);
+        printf("before shiftLeft()\n");
+        printAsGrid(target);
+        getchar();
+        shiftLeft(target);
+        printf("after shiftLeft()\n");
+        printAsGrid(target);
+        getchar();
     }
     //next: order of operations
-    for(i = 0; i < strlen(operators); i++){
-        printf("expression=====\n");
-        printEx(target);
-        printf("=====\n");
-        printf("checking for: %c\n", operators[i]);
-        if((n = firstOpInRange(target, operators[i], startcol, endcol)) != -1){
-            printf("found %c at col %d\n", target->ops[n], n);
-            target->nums[n - 1] = evalOp(target, n);
-            target->ops[n] = NULL_CHAR;
-            target->nums[n + 1] = NULL_DOUBLE;
-            shiftLeft(target);
-        }
+    if((n = firstOpInRange(target, highestOp(target, startcol, endcol), startcol, endcol)) != -1){
+        target->nums[n - 1] = evalOp(target, n);
+        target->ops[n] = NULL_CHAR;
+        target->nums[n + 1] = NULL_DOUBLE;
+        shiftLeft(target);
+        eval(target, startcol, target->parts);
     }
     //next: functions
 }
 
 double evalOp(Expression *target, int col){
-    printf("evalOp evaluating: %lf%c%lf\n", target->nums[col-1], target->ops[col], target->nums[col+1]);
     switch(target->ops[col]){
         case '^':
             return pow(target->nums[col - 1], target->nums[col + 1]);
@@ -71,23 +69,18 @@ double evalOp(Expression *target, int col){
 
 void shiftLeft(Expression *ex){
     int i, nullfound = 0;
+    if(isNullCol(ex, ex->parts)) ex->parts--;
     for(i = ex->parts; i >= 0; i--){
         if(isNullCol(ex, i)){
             nullfound = 1;
             break;
         }
     }
-    if(i == ex->parts) return;
     if(nullfound){
-        ex->parts--;
-        strcpy(ex->funcs[i], ex->funcs[i + 1]);
-        strcpy(ex->funcs[i + 1], NULL_STR);
-        ex->nums[i] = ex->nums[i + 1];
-        ex->nums[i + 1] = NULL_DOUBLE;
-        ex->ops[i] = ex->ops[i + 1];
-        ex->ops[i + 1] = NULL_CHAR;
-        ex->parens[i] = ex->parens[i + 1];
-        ex->parens[i + 1] = NULL_CHAR;
+        if(i != ex->parts){
+            cpycol(ex, i, i + 1);
+            nullifycol(ex, i + 1);
+        }
         shiftLeft(ex);
     }else return;
 }
@@ -147,6 +140,20 @@ void parse(char *source, Expression *target){
     }
 }
 
+void cpycol(Expression *ex, int dest, int source){
+    ex->nums[dest] = ex->nums[source];
+    ex->ops[dest] = ex->ops[source];
+    ex->parens[dest] = ex->parens[source];
+    strcpy(ex->funcs[dest], ex->funcs[source]);
+}
+
+void nullifycol(Expression *ex, int i){
+    ex->nums[i] = NULL_DOUBLE;
+    ex->ops[i] = NULL_CHAR;
+    ex->parens[i] = NULL_CHAR;;
+    strcpy(ex->funcs[i], NULL_STR);
+}
+
 void printEx(Expression *target){
     int i;
     for(i = 0; i <= target->parts; i++){
@@ -161,6 +168,17 @@ void printEx(Expression *target){
         }
     }
     printf("\n");
+}
+
+void printAsGrid(Expression *ex){
+    int i;
+    printf("=======expression=========\n");
+    printf("-> ");
+    printEx(ex);
+    printf("\nNum:\t\tFunc:\tOp:\tParen:\n");
+    for(i = 0; i <= ex->parts; i++){
+        printf("%lf\t%s\t%c\t%c\n", ex->nums[i], ex->funcs[i], ex->ops[i], ex->parens[i]);
+    }
 }
 
 void setupEx(Expression *target){
@@ -209,6 +227,16 @@ double str2dbl(char *str){
     return result;
 }
 
+char highestOp(Expression *ex, int start, int end){
+    int i, j;
+    for(i = 0; i < strlen(operators); i++){
+        for(j = start; j <= end; j++){
+            if(operators[i] == ex->ops[j]) return ex->ops[j];
+        }
+    }
+    return NULL_CHAR;
+}
+
 int hasparens(Expression *target, int start, int end){
     int i, result = 0;
     for(i = start; i <= end; i++){
@@ -218,7 +246,7 @@ int hasparens(Expression *target, int start, int end){
 }
 
 int isNullCol(Expression *target, int col){
-    if(strcmp(target->funcs[col], NULL_STR) &&
+    if(strcmp(target->funcs[col], NULL_STR) == 0 &&
        target->ops[col] == NULL_CHAR &&
        target->parens[col] == NULL_CHAR &&
        target->nums[col] == NULL_DOUBLE
