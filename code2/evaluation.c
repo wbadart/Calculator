@@ -7,6 +7,46 @@ char operators[] = "^*/+-%";
 
 /*=====Evaluation========================*/
 
+double eval(Expression *ex, int startcol, int endcol){
+    int i, n, j=-1, k; char c;
+    double result;
+    updateParts(ex);
+    printf("startcol:%d\tendcol:%d\n", startcol, endcol);
+    printAsGrid(ex, "lib.c", 14);
+    //base case: is there only one number left?
+    if(ex->parts <= 1) return ex->nums[0];
+
+    //next: evaluate parens
+    n = hasparens(ex, startcol, endcol);
+    printf("between %d and %d, there are %d parens\n", startcol, endcol, n);
+    if(n > 0){
+        j = lastParen(ex, '(');
+        k = firstParen(ex, ')');
+        c = highestOp(ex, j, k);
+        printf("found %c operator\n", c);
+        if(c != NULL_CHAR){         //if there's an expression inside the parens...
+            eval(ex, j + 1, k - 1); //evaluate it
+        }else{
+            if(j >= 1 && isa(ex, j - 1) == 'f'){    //if the parens are preceded by a function...
+                evalFunc(ex, j - 1);                //evaluate the function
+            }else{                                  //otherwise clear the parens
+                nullifycol(ex, j);
+                nullifycol(ex, k);
+                shiftLeft(ex);
+            }
+        }
+    }
+
+    //re-evaluate base case
+    if(ex->parts <= 1) return ex->nums[0];
+
+    //next: order of operations
+    c = highestOp(ex, startcol, endcol);            //find the highest order operator
+    n = firstOpInRange(ex, c, startcol, endcol);    //find the first occurence of this operator
+    evalOp(ex, n);                                  //evaluate it
+    eval(ex, 0, ex->parts);                         //rinse and repeat
+}
+
 void evalFunc(Expression *ex, int col){
     double result = NULL_DOUBLE;
     if(strcmp(ex->funcs[col], "sin") == 0)
