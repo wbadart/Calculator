@@ -7,43 +7,54 @@ char operators[] = "^*/+-%";
 
 /*=====Evaluation========================*/
 
-double evalFunc(Expression *ex, int col){
+void evalFunc(Expression *ex, int col){
     double result = NULL_DOUBLE;
     if(strcmp(ex->funcs[col], "sin") == 0)
-        result = sin(ex->nums[col+2]);
+        result = sin(ex->nums[col + 2]);
     else if(strcmp(ex->funcs[col], "cos") == 0)
-        result = cos(ex->nums[col+2]);
+        result = cos(ex->nums[col + 2]);
     else if(strcmp(ex->funcs[col], "tan") == 0)
-        result = tan(ex->nums[col+2]);
+        result = tan(ex->nums[col + 2]);
     else if(strcmp(ex->funcs[col], "log") == 0)
-        result = log10(ex->nums[col+2]);
-    return result;
+        result = log10(ex->nums[col + 2]);
+    nullifycol(ex, col - 1);
+    nullifycol(ex, col);
+    nullifycol(ex, col + 1);
+    nullifycol(ex, col + 2);
+    ex->nums[col] = result;
+    shiftLeft(ex);
 }
 
-double evalOp(Expression *target, int col){
+void evalOp(Expression *target, int col){
+    double result = NULL_DOUBLE;
     switch(target->ops[col]){
         case '^':
-            return pow(target->nums[col - 1], target->nums[col + 1]);
+            result = pow(target->nums[col - 1], target->nums[col + 1]);
             break;
         case '*':
-            return target->nums[col - 1] * target->nums[col + 1];
+            result = target->nums[col - 1] * target->nums[col + 1];
             break;
         case '/':
-            return target->nums[col - 1] / target->nums[col + 1];
+            result = target->nums[col - 1] / target->nums[col + 1];
             break;
         case '+':
-            return target->nums[col - 1] + target->nums[col + 1];
+            result = target->nums[col - 1] + target->nums[col + 1];
             break;
         case '-':
-            return target->nums[col - 1] - target->nums[col + 1];
+            result = target->nums[col - 1] - target->nums[col + 1];
             break;
         case '%':
-            return (int)target->nums[col - 1] % (int)target->nums[col + 1];
+            result = (int)target->nums[col - 1] % (int)target->nums[col + 1];
             break;
         default:
-            return NULL_DOUBLE;
+            result = NULL_DOUBLE;
             break;
     }
+    nullifycol(target, col - 1);
+    nullifycol(target, col);
+    nullifycol(target, col + 1);
+    target->nums[col - 1] = result;
+    shiftLeft(target);
 }
 
 /*========================================*/
@@ -92,7 +103,7 @@ int countOps(Expression *target, int start, int end){
     return result;
 }
 
-int coutFuncs(Expression *ex, int start, int end){
+int countFuncs(Expression *ex, int start, int end){
     int i, result = 0;
     for(i = start; i <= end; i++){
         if(strcmp(ex->funcs[i], NULL_STR) != 0)
@@ -134,6 +145,17 @@ int hasparens(Expression *target, int start, int end){
     return result;
 }
 
+char isa(Expression *ex, int col){
+    if(strcmp(ex->funcs[col], NULL_STR) != 0)
+        return 'f';
+    if(ex->ops[col] != NULL_CHAR)
+        return 'o';
+    if(ex->parens[col] != NULL_CHAR)
+        return 'p';
+    if(ex->nums[col] != NULL_DOUBLE)
+        return 'n';
+    return NULL_CHAR;
+}
 int isNullCol(Expression *target, int col){
     if(strcmp(target->funcs[col], NULL_STR) == 0 && //compare all rows to respective null val
        target->ops[col] == NULL_CHAR &&
