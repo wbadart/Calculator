@@ -12,6 +12,7 @@ typedef struct Expression_s{
     char ops[256];
     char funcs[256][4];
     char parens[256];
+    char vars[265];
     int parts;
 } Expression;
 

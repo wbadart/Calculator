@@ -11,19 +11,15 @@ double eval(Expression *ex, int startcol, int endcol){
     int i, n, j=-1, k; char c;
     double result;
     updateParts(ex);
-    printf("startcol:%d\tendcol:%d\n", startcol, endcol);
-    printAsGrid(ex, "lib.c", 14);
     //base case: is there only one number left?
     if(ex->parts <= 1) return ex->nums[0];
 
     //next: evaluate parens
     n = hasparens(ex, startcol, endcol);
-    printf("between %d and %d, there are %d parens\n", startcol, endcol, n);
     if(n > 0){
         j = lastParen(ex, '(');
         k = firstParen(ex, ')');
         c = highestOp(ex, j, k);
-        printf("found %c operator\n", c);
         if(c != NULL_CHAR){         //if there's an expression inside the parens...
             eval(ex, j + 1, k - 1); //evaluate it
         }else{
@@ -57,12 +53,12 @@ void evalFunc(Expression *ex, int col){
         result = tan(ex->nums[col + 2]);
     else if(strcmp(ex->funcs[col], "log") == 0)
         result = log10(ex->nums[col + 2]);
-    nullifycol(ex, col - 1);
-    nullifycol(ex, col);
-    nullifycol(ex, col + 1);
-    nullifycol(ex, col + 2);
-    ex->nums[col] = result;
-    shiftLeft(ex);
+    nullifycol(ex, col);        //clear the function col 
+    nullifycol(ex, col + 1);    //clear the open paren col
+    nullifycol(ex, col + 2);    //clear the number col
+    nullifycol(ex, col + 3);    //clear the close paren col
+    ex->nums[col] = result;     //assign result to func col
+    shiftLeft(ex);              //remove null cols
 }
 
 void evalOp(Expression *target, int col){
@@ -194,13 +190,16 @@ char isa(Expression *ex, int col){
         return 'p';
     if(ex->nums[col] != NULL_DOUBLE)
         return 'n';
+    if(ex->vars[col] != NULL_CHAR)
+        return 'v';
     return NULL_CHAR;
 }
 int isNullCol(Expression *target, int col){
     if(strcmp(target->funcs[col], NULL_STR) == 0 && //compare all rows to respective null val
        target->ops[col] == NULL_CHAR &&
        target->parens[col] == NULL_CHAR &&
-       target->nums[col] == NULL_DOUBLE
+       target->nums[col] == NULL_DOUBLE &&
+       target->vars[col] == NULL_CHAR
     ) return 1;
     return 0;
 }
@@ -213,13 +212,15 @@ void cpycol(Expression *ex, int dest, int source){
     ex->nums[dest] = ex->nums[source];
     ex->ops[dest] = ex->ops[source];
     ex->parens[dest] = ex->parens[source];
+    ex->vars[dest] = ex->vars[source];
     strcpy(ex->funcs[dest], ex->funcs[source]);
 }
 
 void nullifycol(Expression *ex, int i){
     ex->nums[i] = NULL_DOUBLE;
     ex->ops[i] = NULL_CHAR;
-    ex->parens[i] = NULL_CHAR;;
+    ex->parens[i] = NULL_CHAR;
+    ex->vars[i] = NULL_CHAR;
     strcpy(ex->funcs[i], NULL_STR);
 }
 
@@ -336,6 +337,8 @@ void setupEx(Expression *target){       //this is needed for the base case of re
     target->parens[1] = NULL_CHAR;
     target->nums[0] = NULL_DOUBLE;
     target->nums[1] = NULL_DOUBLE;
+    target->vars[0] = NULL_CHAR;
+    target->vars[1] = NULL_CHAR;
 }
 
 /*============================================*/
@@ -359,6 +362,8 @@ void printEx(Expression *target){
             printf("%lf", target->nums[i]);
         }else if(target->ops[i] != NULL_CHAR){
             printf("%c", target->ops[i]);
+        }else if(target->vars[i] != NULL_CHAR){
+            printf("%c", target->vars[i]);
         }
     }
     printf("\n");
@@ -367,13 +372,14 @@ void printEx(Expression *target){
 void printAsGrid(Expression *ex, char *prog, int ln){
     int i;
     printf("==>called from [%s:%d]=========================\n==>", prog, ln); printEx(ex);
-    printf("   |Num:\t| Func:\t| Op:\t| Paren:\n");
+    printf("   |Num:\t| Func:\t| Op:\t| Paren:\t| Var:\n");
     for(i = 0; i <= ex->parts; i++){
-        printf("%2d | %lf\t| %s\t| %c\t| %c\n", i,
+        printf("%2d | %lf\t| %s\t| %c\t| %c\t| %c\n", i,
                 ex->nums[i]==NULL_DOUBLE?.1:ex->nums[i],
                 ex->funcs[i],
                 ex->ops[i]==NULL_CHAR?:ex->ops[i],
-                ex->parens[i]==NULL_CHAR?:ex->parens[i]
+                ex->parens[i]==NULL_CHAR?:ex->parens[i],
+                ex->vars[i]==NULL_CHAR?:ex->vars[i]
         );
     }
     printf("==================================================\n\n");
