@@ -1,47 +1,38 @@
 #include "head.h"
 
 int winWid = 800, winHgt = 600;
+int globR = 255, globG = 255, globB = 255;
 
-void settings(char *str)
-{
-	//printf("%s\n",str);
-	//start processing string at i = 4 because we already know the first 4 
-	//characters are "set "
-	int i; char subs[15], val[20];
-	for(i = 0; i < strlen(str)-4; i++)
-	{
-		subs[i] = str[i+4]; 
-	}
-	//printf("%s\n",subs);
-	if(strncmp(subs, "width", 5) == 0)
-	{
-		for(i = 0; i < strlen(subs)-6; i++)
-		{
-			val[i] = subs[i+6];
-		}
-		winWid = (int)str2dbl(val);
-	}
-	if(strncmp(subs, "height", 6) == 0)
-	{
-		for(i = 0; i < strlen(subs)-7; i++)
-		{
-			val[i] = subs[i+7];
-		}
-		winHgt = (int)str2dbl(val);
-	}
-	if(strncmp(subs, "color", 5) == 0)
-	{
-		for(i = 0; i < strlen(subs)-6; i++)
-		{
-			val[i] = subs[i+6];
-		}
-	}
+void settings(char *str){
+    str += 4;   //remove "set " from the string
+    char arg1[256], arg2[256];
+    int space1 = firstIndexOf(' ', str, 0), space2;
+    snprintf(arg1, space1 + 1, "%s", str);
+    snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);
+    printf("\targ1:==>%s<== arg2:==>%s<==\n", arg1, arg2);
+    if(strcmp(arg1, "width") == 0) winWid = (int)str2dbl(arg2);
+    if(strcmp(arg1, "height") == 0) winHgt = (int)str2dbl(arg2);
+    if(strcmp(arg1, "color") == 0){
+        char arg3[256], arg4[256]; int n;
+        str += 6;
+        space1 = firstIndexOf(' ', str, 0);
+        snprintf(arg2, space1 + 1, "%s", str);
+
+        space2 = firstIndexOf(' ', str, space1 + 1);
+        snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
+        
+        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
+        printf("\tcolors:>%s<, >%s<, >%s<\n", arg2, arg3, arg4);
+        globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
+    }
+
 }
+
 void plot(Expression *ex){
     gfx_open(winWid, winHgt, ex2str(ex));
     gfx_clear();
-    gfx_color(255, 255, 255);
     drawAxes(-10, 10, -10, 10);
+    gfx_color(globR, globG, globB);
     int i, xpxl, ypxl;float yval, xval;
     for(i = 0; i < winWid; i++){
         xpxl = i;
