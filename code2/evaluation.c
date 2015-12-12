@@ -1,4 +1,4 @@
-#include "head.h"
+#include "evaluation.h"
 #define NULL_DOUBLE -99999.
 #define NULL_CHAR '#'
 #define NULL_STR "\0"
@@ -107,9 +107,9 @@ int firstOpInRange(Expression *target, char op, int start, int end){
     return -1;
 }
 
-int firstIndexOf(char c, char *str){
+int firstIndexOf(char c, char *str, int start){
     int i, max = strlen(str);
-    for(i = 0; i < max; i++){
+    for(i = start; i < max; i++){
         if(str[i] == c) return i;
     }
     return -1;
@@ -179,6 +179,25 @@ int hasparens(Expression *target, int start, int end){
         }
     }
     return result;
+}
+
+int nvars(Expression *ex){
+    int i, j = 0;
+    char foundvars[256];
+    for(i = 0; i <= ex->parts; i++){
+        if(isa(ex, i) == 'v' && !charinstr(foundvars, ex->vars[i], j + 1)){
+            foundvars[j] = ex->vars[i];
+            j++;
+        }
+    }
+    return j;
+}
+
+int charinstr(char str[256], char target, int max){
+    int i;
+    for(i = 0; i < max; i++)
+        if(str[i] == target) return 1;
+    return 0;
 }
 
 char isa(Expression *ex, int col){
@@ -253,7 +272,7 @@ void shiftLeft(Expression *ex){ //by shifting content left, this func puts null 
 /*=====String parsing===========================*/
 
 double str2dbl(char *str){
-    int j = 0, i, n = firstIndexOf('.', str), neg = 0; //start str iter. @ 0, find decimal
+    int j = 0, i, n = firstIndexOf('.', str, 0), neg = 0; //start str iter. @ 0, find decimal
     double result = 0;
     if(str[0] == '-'){  //if num is negative, j=1 to skip the dash
         neg = 1; j = 1;
@@ -284,13 +303,22 @@ void parse(char *source, Expression *target){
     int i = 0, k = 0, j = 0;
     char tmpstr[256];
     while(source[i] != '\0'){       //until you reach the end of the string...
-        if(isalpha(source[i])){                     //if it's a letter, then we have a func
+        if(isalpha(source[i]) && isalpha(source[i + 1])){//if it's a letter followed by letter-> func
             nullifycol(target, k);                      //start with a blank slate
-            strncpy(target->funcs[k], &source[i], 3);   //for now, we're dealing w/ 3 letter funcs
+            j = firstIndexOf('(', source, i) - i;          //number of chars in func
+            strncpy(target->funcs[k], &source[i], j);   //copy func string to target
             target->funcs[k][3] = '\0';                 //add delimiting character
             target->parts = k;                          //log that you've added a col
             k++;
             i += 3;                                     //we already have these logged
+            continue;
+        }
+        if(isalpha(source[i])){     //now we're dealing with a variable
+            nullifycol(target, k);
+            target->vars[k] = source[i];
+            target->parts = k;
+            k++;
+            i++;
             continue;
         }
         if(source[i] == '(' || source[i] == ')'){   //if it's a paren, then the it's a paren
@@ -301,7 +329,10 @@ void parse(char *source, Expression *target){
             i++;                                        //here, we only need to advance 1 char
             continue;
         }
-        if(isoperator(source[i]) && (isdigit(source[i - 1]) || source[i - 1] == ')')){
+        if(isoperator(source[i]) && (
+                    isdigit(source[i - 1]) ||
+                    source[i - 1] == ')' ||
+                    isa(target, k - 1) == 'v')){
             nullifycol(target, k);
             target->ops[k] = source[i];                 //tracking operators
             target->parts = k;
