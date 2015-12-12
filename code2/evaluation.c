@@ -403,7 +403,7 @@ void printEx(Expression *target){
 void printAsGrid(Expression *ex, char *prog, int ln){
     int i;
     printf("==>called from [%s:%d]=========================\n==>", prog, ln); printEx(ex);
-    printf("   |Num:\t| Func:\t| Op:\t| Paren:\t| Var:\n");
+    printf("   |Num:\t| Func:\t| Op:\t| Paren:| Var:\n");
     for(i = 0; i <= ex->parts; i++){
         printf("%2d | %lf\t| %s\t| %c\t| %c\t| %c\n", i,
                 ex->nums[i]==NULL_DOUBLE?.1:ex->nums[i],
