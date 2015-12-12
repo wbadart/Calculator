@@ -16,9 +16,11 @@ void settings(char *str){
     if(strcmp(arg1, "width") == 0){
         printf("\tsetting window width to %s\n", arg2);
         winWid = (int)str2dbl(arg2);
+        samewindow = 0;
     }else if(strcmp(arg1, "height") == 0){
         printf("\tsetting window height to %s\n", arg2);
         winHgt = (int)str2dbl(arg2);
+        samewindow = 0;
     }else if(strcmp(arg1, "color") == 0){
         char arg3[256], arg4[256]; int space2;
         str += 6;
