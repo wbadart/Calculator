@@ -2,13 +2,48 @@
 
 int winWid = 800, winHgt = 600;
 
+void settings(char *str)
+{
+	//printf("%s\n",str);
+	//start processing string at i = 4 because we already know the first 4 
+	//characters are "set "
+	int i; char subs[15], val[20];
+	for(i = 0; i < strlen(str)-4; i++)
+	{
+		subs[i] = str[i+4]; 
+	}
+	//printf("%s\n",subs);
+	if(strncmp(subs, "width", 5) == 0)
+	{
+		for(i = 0; i < strlen(subs)-6; i++)
+		{
+			val[i] = subs[i+6];
+		}
+		winWid = (int)str2dbl(val);
+	}
+	if(strncmp(subs, "height", 6) == 0)
+	{
+		for(i = 0; i < strlen(subs)-7; i++)
+		{
+			val[i] = subs[i+7];
+		}
+		winHgt = (int)str2dbl(val);
+	}
+	if(strncmp(subs, "color", 5) == 0)
+	{
+		for(i = 0; i < strlen(subs)-6; i++)
+		{
+			val[i] = subs[i+6];
+		}
+	}
+}
 void plot(Expression *ex){
     gfx_open(winWid, winHgt, ex2str(ex));
     gfx_clear();
     gfx_color(255, 255, 255);
     drawAxes(-10, 10, -10, 10);
     int i, xpxl, ypxl;float yval, xval;
-    for(i = 1; i < winWid; i++){
+    for(i = 0; i < winWid; i++){
         xpxl = i;
         xval = pix2val(xpxl, -10, 10, winWid, 0);
         yval = plugin(ex, xval);

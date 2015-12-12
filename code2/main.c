@@ -15,14 +15,18 @@ int main(int argc, char *argv[]){
                 printf("\e[1;1H\e[2J");
                 continue;
             }
-            parse(str, pe);
-            n = nvars(pe);
-            if(n == 1){
-                plot(pe);
-            }else if(n > 1){
-                printf("err: too many variables\n");
-            }else{
-                printf("\t=%lf\n\n", eval(pe, 0, pe->parts));
+            if(strncmp("set", str, 3) == 0)
+            	settings(str);
+            else{
+            	parse(str, pe);
+                n = nvars(pe);
+            	if(n == 1){
+	            	plot(pe);
+    	        }else if(n > 1){
+        	        printf("err: too many variables\n");
+            	}else{
+                	printf("\t=%lf\n\n", eval(pe, 0, pe->parts));
+            	}
             }
         }
     }
