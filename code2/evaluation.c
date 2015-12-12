@@ -163,6 +163,31 @@ char highestOp(Expression *ex, int start, int end){
 
 /*=====Boolean functions====================*/
 
+int validstr(char *str){
+    int len = strlen(str), openP = 0, closeP = 0, i;
+    int nums = 0, chars = 0;
+    if(strcmp(str, "c") == 0 || strcmp(str, "q") == 0) return 0;
+    for(i = 0; i < len; i++){
+        if(str[i] == ' '){
+            return 1;
+        }
+        if(isdigit(str[i]) && !isdigit(str[i + 1]) &&
+                str[i + 1] != '.' && str[i + 1] != ')' && !isoperator(str[i + 1]) && str[i + 1] != '\0'){
+            return 2;
+        }
+        if(str[i] == ')' && i != len - 1 && !isoperator(str[i + 1])){
+            return 3;
+        }
+        if(str[i] == '(') openP++;
+        if(str[i] == ')') closeP++;
+        if(isdigit(str[i]) || str[i] == '.') nums++;
+        if(isalpha(str[i])) chars++;
+    }
+    if(openP != closeP) return 4;
+    if(nums + openP + closeP == 0) return 5;
+    return 0;
+}
+
 int isoperator(char c){
     int i = strlen(operators);
     for(i = i - 1; i >= 0; i--){
@@ -302,7 +327,7 @@ double str2dbl(char *str){
 void parse(char *source, Expression *target){
     int i = 0, k = 0, j = 0;
     char tmpstr[256];
-    while(source[i] != '\0'){       //until you reach the end of the string...
+    while(source[i] != '\0' && i < 256){       //until you reach the end of the string...
         if(isalpha(source[i]) && isalpha(source[i + 1])){//if it's a letter followed by letter-> func
             nullifycol(target, k);                      //start with a blank slate
             j = firstIndexOf('(', source, i) - i;          //number of chars in func
@@ -414,6 +439,26 @@ void printAsGrid(Expression *ex, char *prog, int ln){
         );
     }
     printf("==================================================\n\n");
+}
+
+void errmsg(int n){
+    switch(n){
+        case 1:
+            printf("\terr: expression contains space\n");
+            break;
+        case 2:
+            printf("\terr: missing operator after digit\n");
+            break;
+        case 3:
+            printf("\terr: missing operator after parenthasis\n");
+            break;
+        case 4:
+            printf("\terr: unbalanced parenthases\n");
+            break;
+        case 5:
+            printf("\terr: invalid expression\n");
+            break;
+    }
 }
 
 /*============================================*/

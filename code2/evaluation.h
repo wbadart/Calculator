@@ -16,6 +16,10 @@ typedef struct Expression_s{
     int parts;
 } Expression;
 
+//determines if a string is a valid expression
+int validstr(char *);
+//prints error message by number
+void errmsg(int);
 //get keyboard input, strip newline
 void getInput(char *target);
 //prints an expression
