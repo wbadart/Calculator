@@ -1,4 +1,4 @@
-#include "head.h"
+#include "plot.h"
 
 int winWid = 800, winHgt = 600;
 int globR = 255, globG = 255, globB = 255;

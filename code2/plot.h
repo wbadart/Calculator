@@ -1,4 +1,4 @@
-#include "evaluation.h"
+#include "eval.h"
 #include "gfx5.h"
 
 void settings(char *);

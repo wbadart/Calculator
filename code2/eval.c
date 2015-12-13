@@ -1,4 +1,4 @@
-#include "evaluation.h"
+#include "eval.h"
 #define NULL_DOUBLE -99999.
 #define NULL_CHAR '#'
 #define NULL_STR "\0"
@@ -92,89 +92,6 @@ void evalFunc(Expression *ex, int col){
     shiftLeft(ex);              //remove null cols
 }
 
-void settings(char *str){
-    str += 4;   //remove "set " from the string
-    char arg1[256], arg2[256];
-    int space1 = firstIndexOf(' ', str, 0);
-    if(verbose) printf("[settings:119]\tcommand: %s\n", str);
-    if(space1 != -1){
-        snprintf(arg1, space1 + 1, "%s", str);
-        snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);
-    }else strcpy(arg1, str);
-    if(verbose) printf("[settings:124]\targ1:%s\targ2:%s\n", arg1, arg2);
-    if(strcmp(arg1, "width") == 0){
-        printf("\tsetting window width to %s\n", arg2);
-        winWid = (int)str2dbl(arg2);
-        samewindow = 0;
-    }else if(strcmp(arg1, "height") == 0){
-        printf("\tsetting window height to %s\n", arg2);
-        winHgt = (int)str2dbl(arg2);
-        samewindow = 0;
-    }else if(strcmp(arg1, "color") == 0){
-        char arg3[256], arg4[256]; int space2;
-        str += 6;
-        space1 = firstIndexOf(' ', str, 0);
-        snprintf(arg2, space1 + 1, "%s", str);
-
-        space2 = firstIndexOf(' ', str, space1 + 1);
-        snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
-        
-        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
-        printf("\tsetting color to %s, %s, %s\n", arg2, arg3, arg4);
-        globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
-    }else if(strcmp(arg1, "window") == 0){
-        if(windowopen){
-            if((int)str2dbl(arg2) == 1) samewindow = 0;
-            else if((int)str2dbl(arg2) == 0) samewindow = 1;
-            else samewindow = (samewindow + 1) % 2;
-            printf("\twill open plots in %s window\n", samewindow?"same":"new");
-        }else{
-            printf("\terr: must have at least one window open to disable new window\n");
-        }
-    } else if(strcmp(arg1, "verbose") == 0){
-        if((int)str2dbl(arg2) == 1) verbose = 1;
-        else if((int)str2dbl(arg2) == 0) verbose = 0;
-        else verbose = (verbose + 1) % 2;
-        printf("\tturning verbose evaluation %s\n", verbose?"on":"off");
-    }else if(strcmp(arg1, "file") == 0){
-        strcpy(settingsFile, arg2);
-        getSettings(settingsFile);
-    }else if(strcmp(arg1, "base") == 0){
-        logBase = (int)str2dbl(arg2);
-        printf("\tsetting log base to %d\n", logBase);
-    }
-    /*==Experimental:==
-    else if(strcmp(arg1, "xmin") == 0){
-        xmin = (int)str2dbl(arg2);
-    }else if(strcmp(arg1, "xmax") == 0){
-        xmax= (int)str2dbl(arg2);
-    }else if(strcmp(arg1, "ymin") == 0){
-        ymin = (int)str2dbl(arg2);
-    }else if(strcmp(arg1, "ymax") == 0){
-        ymax = (int)str2dbl(arg2);
-    }
-    */
-    else{
-        printf("\twindow width:\t|window height:\n");
-        printf("\t%d\t\t|%d\n", winWid, winHgt);
-        printf("\t================================\n");
-        printf("\tred:\t|green:\t|blue:\n");
-        printf("\t%d\t|%d\t|%d\n", globR, globG, globB);
-        printf("\t================================\n");
-        printf("\topen in new window:\n");
-        printf("\t%s\n", samewindow?"off":"on");
-    }
-}
-
-void help(void){
-    printf("edit settings with commands below (do not enter brackets):\n");
-    printf("\tset width [pixels]\n");
-    printf("\tset height[pixels]\n");
-    printf("\tset color [red] [green] [blue]\n");
-    printf("\tset window [no args; toggles plotting on same axes]\n");
-    printf("\tset [no args; shows current settings\n");
-    printf("\t'c' to clear screen, 'q' to quit program\n");
-}
 
 void evalOp(Expression *target, int col){
     double result = NULL_DOUBLE;
@@ -283,7 +200,7 @@ int validstr(char *str){
     int nums = 0, chars = 0;
     if(strcmp(str, "c") == 0 || strcmp(str, "q") == 0) return 0;
     for(i = 0; i < len; i++){
-        if(str[i] == ' '){
+        if(isspace(str[i])){
             return 1;
         }
         if(isdigit(str[i]) && !isdigit(str[i + 1]) &&
@@ -517,9 +434,14 @@ void setupEx(Expression *target){       //this is needed for the base case of re
 /*=====I/O Functions==========================*/
 
 void getInput(char *target){
+    int i;
     printf(">> ");
     fgets(target, 256, stdin);
     target[strlen(target) - 1] = '\0';  //remove the newline from the input
+    if(!isalnum(target[0]) && target[0] != '('){
+        if(verbose) printf("[getInput:443] shifting target\n");
+        target++;
+    }
 }
 
 void printEx(Expression *target){
@@ -580,6 +502,91 @@ void errmsg(int n){
     }
 }
 
+void settings(char *str){
+    str += 4;   //remove "set " from the string
+    char arg1[256], arg2[256];
+    int space1 = firstIndexOf(' ', str, 0);
+    if(verbose) printf("[settings:119]\tcommand: %s\n", str);
+    if(space1 != -1){
+        snprintf(arg1, space1 + 1, "%s", str);
+        snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);
+    }else strcpy(arg1, str);
+    if(verbose) printf("[settings:124]\targ1:%s\targ2:%s\n", arg1, arg2);
+    if(strcmp(arg1, "width") == 0){
+        if(verbose) printf("\tsetting window width to %s\n", arg2);
+        winWid = (int)str2dbl(arg2);
+        samewindow = 0;
+    }else if(strcmp(arg1, "height") == 0){
+        if(verbose) printf("\tsetting window height to %s\n", arg2);
+        winHgt = (int)str2dbl(arg2);
+        samewindow = 0;
+    }else if(strcmp(arg1, "color") == 0){
+        char arg3[256], arg4[256]; int space2;
+        str += 6;
+        space1 = firstIndexOf(' ', str, 0);
+        snprintf(arg2, space1 + 1, "%s", str);
+
+        space2 = firstIndexOf(' ', str, space1 + 1);
+        snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
+        
+        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
+        if(verbose) printf("\tsetting color to %s, %s, %s\n", arg2, arg3, arg4);
+        globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
+    }else if(strcmp(arg1, "window") == 0){
+        if(windowopen){
+            if((int)str2dbl(arg2) == 1) samewindow = 0;
+            else if((int)str2dbl(arg2) == 0) samewindow = 1;
+            else samewindow = (samewindow + 1) % 2;
+            if(verbose) printf("\twill open plots in %s window\n", samewindow?"same":"new");
+        }else{
+            printf("\terr: must have at least one window open to disable new window\n");
+        }
+    } else if(strcmp(arg1, "verbose") == 0){
+        if((int)str2dbl(arg2) == 1) verbose = 1;
+        else if((int)str2dbl(arg2) == 0) verbose = 0;
+        else verbose = (verbose + 1) % 2;
+        if(verbose) printf("\tturning verbose evaluation %s\n", verbose?"on":"off");
+    }else if(strcmp(arg1, "file") == 0){
+        strcpy(settingsFile, arg2);
+        getSettings(settingsFile);
+    }else if(strcmp(arg1, "base") == 0){
+        logBase = (int)str2dbl(arg2);
+        if(verbose) printf("\tsetting log base to %d\n", logBase);
+    }else if(strcmp(arg1, "refresh") == 0){
+        if(verbose) printf("\trefreshing settings from file: %s\n", settingsFile);
+        settings(settingsFile);
+    }
+    /*==Experimental:==
+    else if(strcmp(arg1, "xmin") == 0){
+        xmin = (int)str2dbl(arg2);
+    }else if(strcmp(arg1, "xmax") == 0){
+        xmax= (int)str2dbl(arg2);
+    }else if(strcmp(arg1, "ymin") == 0){
+        ymin = (int)str2dbl(arg2);
+    }else if(strcmp(arg1, "ymax") == 0){
+        ymax = (int)str2dbl(arg2);
+    }
+    */
+    else{
+        printf("\t===Current settings=============\n");
+        printf("\twindow width:\t|window height:\n");
+        printf("\t%d\t\t|%d\n", winWid, winHgt);
+        printf("\t================================\n");
+        printf("\tred:\t|green:\t|blue:\n");
+        printf("\t%d\t|%d\t|%d\n", globR, globG, globB);
+        printf("\t================================\n");
+        printf("\topen in new window:\n");
+        printf("\t%s\n", samewindow?"off":"on");
+        printf("\t================================\n");
+        printf("\tverbose evaluation:\n");
+        printf("\t%s\n", verbose?"on":"off");
+        printf("\t================================\n");
+        printf("\tlog base:\n");
+        printf("\t%d\n", logBase);
+        printf("\t================================\n");
+    }
+}
+
 void getSettings(char *filename){
     FILE *fp; int i;
     if(fp = fopen(filename, "r")){
@@ -597,6 +604,26 @@ void getSettings(char *filename){
             printf("\t\t  using stock defaults\n");
         }
     }
+}
+
+void help(void){
+    printf("\tdo calculation:         '[expression, no variables]'\n");
+    printf("\tplot function:          '[expression, one variable]'\n");
+    printf("\tview help menu:         'help'\n");
+    printf("\tplot window width:      'set width [pixels]'\n");
+    printf("\tplot window height:     'set height [pixels]'\n");
+    printf("\tplot color:             'set color [red] [green] [blue]'\n");
+    printf("\t                            must be in range [0, 255]\n");
+    printf("\ttoggle new window:      'set window [args]'\n");
+    printf("\t                            args: 1 (plot in new window), 0 (plot in same window), none (toggle)\n");
+    printf("\ttoggle verbose mode:    'set verbose [args]'\n");
+    printf("\t                            args: 1 (on), 0 (off), none (toggle)\n");
+    printf("\tchange base of 'log':   'set base [new base]'\n"); 
+    printf("\tget settings from file: 'set file [filename]'\n");
+    printf("\tdisplay settings:       'set'\n");
+    printf("\trefresh settings:       'set refresh'\n");
+    printf("\tclear screen:           'c'\n");
+    printf("\tquit prgram:            'q'\n");
 }
 
 /*============================================*/

@@ -1,6 +1,7 @@
-#include "head.h"
+#include "plot.h"
 
 int main(int argc, char *argv[]){
+    printf("\e[1;1H\e[2J\nWelcome to the TwIn-84\n");
     char str[256] = "0"; int n;
     Expression usrEx, *pe = &usrEx; setupEx(pe);
     getSettings(settingsFile);
@@ -13,6 +14,7 @@ int main(int argc, char *argv[]){
             getchar();
         }else printf("\t=%lf\n", eval(pe, 0, pe->parts));
     }else{
+        help();
         getInput(str);
     }
     while(argc <= 1){
