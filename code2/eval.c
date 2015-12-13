@@ -331,6 +331,7 @@ void shiftLeft(Expression *ex){ //by shifting content left, this func puts null 
 double str2dbl(char *str){
     int j = 0, i, n = firstIndexOf('.', str, 0), neg = 0; //start str iter. @ 0, find decimal
     double result = 0;
+    for(i = 0; i <= strlen(str); i++) if(isspace(str[i])) str[i] = '\0';
     if(str[0] == '-'){  //if num is negative, j=1 to skip the dash
         neg = 1; j = 1;
     }
@@ -532,6 +533,18 @@ void settings(char *str){
         snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
         if(verbose) printf("\tsetting color to %s, %s, %s\n", arg2, arg3, arg4);
         globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
+    }else if(strcmp(arg1, "color2") == 0){
+        char arg3[256], arg4[256]; int space2;
+        str += 7;
+        space1 = firstIndexOf(' ', str, 0);
+        snprintf(arg2, space1 + 1, "%s", str);
+
+        space2 = firstIndexOf(' ', str, space1 + 1);
+        snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
+        
+        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
+        printf("%s %s %lf\n", arg2, arg3, str2dbl(arg4));
+        globR2 = (int)str2dbl(arg2); globG2 = (int)str2dbl(arg3); globB2 = (int)str2dbl(arg4);
     }else if(strcmp(arg1, "window") == 0){
         if(windowopen){
             if((int)str2dbl(arg2) == 1) samewindow = 0;
@@ -555,6 +568,11 @@ void settings(char *str){
     }else if(strcmp(arg1, "refresh") == 0){
         if(verbose) printf("\trefreshing settings from file: %s\n", settingsFile);
         settings(settingsFile);
+    }else if(strcmp(arg1, "grad") == 0){
+        if((int)str2dbl(arg2) == 1) useGrad = 1;
+        else if((int)str2dbl(arg2) == 0) useGrad = 0;
+        else useGrad = (useGrad + 1) % 2;
+        if(verbose) printf("\tturning gradient %s\n", useGrad?"on":"off");
     }
     /*==Experimental:==
     else if(strcmp(arg1, "xmin") == 0){
@@ -574,6 +592,11 @@ void settings(char *str){
         printf("\t================================\n");
         printf("\tred:\t|green:\t|blue:\n");
         printf("\t%d\t|%d\t|%d\n", globR, globG, globB);
+        printf("\tred2:\t|green2:|blue2:\n");
+        printf("\t%d\t|%d\t|%d\n", globR2, globG2, globB2);
+        printf("\t================================\n");
+        printf("\tplot gradient:\n");
+        printf("\t%s\n", useGrad?"on":"off");
         printf("\t================================\n");
         printf("\topen in new window:\n");
         printf("\t%s\n", samewindow?"off":"on");
@@ -613,7 +636,10 @@ void help(void){
     printf("\tplot window width:      'set width [pixels]'\n");
     printf("\tplot window height:     'set height [pixels]'\n");
     printf("\tplot color:             'set color [red] [green] [blue]'\n");
+    printf("\tplot secondary color:   'set color 2 [red] [green] [blue]\n");
     printf("\t                            must be in range [0, 255]\n");
+    printf("\tuse gradient on plot:   'set grad [args]'\n");
+    printf("\t                            args: 1 (use gradient), 0 (don't use gradient)), none (toggle)\n");
     printf("\ttoggle new window:      'set window [args]'\n");
     printf("\t                            args: 1 (plot in new window), 0 (plot in same window), none (toggle)\n");
     printf("\ttoggle verbose mode:    'set verbose [args]'\n");

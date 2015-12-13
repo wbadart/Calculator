@@ -5,8 +5,9 @@
 
 extern char operators[], settingsFile[];
 extern int winWid, winHgt, globR, globG, globB,
+       globR2, globG2, globB2,
        samewindow, windowopen, verbose,
-       xmin, xmax, ymin, ymax, logBase;
+       xmin, xmax, ymin, ymax, logBase, useGrad;
 
 //structure which holds expression data.
 //each "column" only contains 1 item, e.g. if nums[2]==3.14, ops[2]==NULL_CHAR

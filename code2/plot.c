@@ -2,8 +2,10 @@
 
 int winWid = 800, winHgt = 600;
 int globR = 255, globG = 255, globB = 255;
+int globR2 = 255, globG2 = 255, globB2 = 255;
 int samewindow = 0, windowopen = 0;
 int xmin = -10, xmax = 10, ymin = -10, ymax = 10;
+int useGrad = 0;
 
 void plot(Expression *ex){
     int origVerbose = verbose;
@@ -15,8 +17,15 @@ void plot(Expression *ex){
     }
     drawAxes(xmin, xmax, ymin, ymax);
     gfx_color(globR, globG, globB);
-    int i, xpxl, ypxl;float yval, xval;
+    int i, xpxl, ypxl, r, g, b;float yval, xval, progress;
     for(i = 0; i < winWid; i++){
+        progress = (float)i / (float)winWid;
+        r = colorInRange(globR, globR2, progress);
+        g = colorInRange(globG, globG2, progress);
+        b = colorInRange(globB, globB2, progress);
+        if(useGrad) gfx_color(colorInRange(globR, globR2, progress),
+                colorInRange(globG, globG2, progress),
+                colorInRange(globB, globB2, progress));
         xpxl = i;
         xval = pix2val(xpxl, xmin, xmax, winWid, 0);
         yval = plugin(ex, xval);
@@ -25,6 +34,10 @@ void plot(Expression *ex){
     }
     gfx_flush();
     verbose = origVerbose;
+}
+
+int colorInRange(int start, int end, double progress){
+    return start + (progress * (end - start));
 }
 
 float plugin(Expression *ex, float val){
