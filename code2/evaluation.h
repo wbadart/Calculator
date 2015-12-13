@@ -4,13 +4,16 @@
 #include <ctype.h>
 
 extern char operators[];
+extern int winWid, winHgt, globR, globG, globB,
+       samewindow, windowopen, verbose,
+       xmin, xmax, ymin, ymax;
 
 //structure which holds expression data.
 //each "column" only contains 1 item, e.g. if nums[2]==3.14, ops[2]==NULL_CHAR
 typedef struct Expression_s{
     double nums[256];
     char ops[256];
-    char funcs[256][4];
+    char funcs[256][6];
     char parens[256];
     char vars[265];
     int parts;

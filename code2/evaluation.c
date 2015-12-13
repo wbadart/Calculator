@@ -4,6 +4,8 @@
 #define NULL_STR "\0"
 
 char operators[] = "^*/+-%";
+int verbose = 0, logBase = 10;
+char *settingsFile = "settings.txt";
 
 /*=====Evaluation========================*/
 
@@ -11,20 +13,30 @@ double eval(Expression *ex, int startcol, int endcol){
     int i, n, j=-1, k; char c;
     double result;
     updateParts(ex);
+    if(verbose) printAsGrid(ex, "evaluation.c", 15);
     //base case: is there only one number left?
     if(ex->parts <= 1) return ex->nums[0];
 
     //next: evaluate parens
     n = hasparens(ex, startcol, endcol);
     if(n > 0){
+        if(verbose) printf("[eval.c:22]\texpression has parens\n");
         j = lastParen(ex, '(');
         k = firstParen(ex, ')');
         c = highestOp(ex, j, k);
         if(c != NULL_CHAR){         //if there's an expression inside the parens...
+            if(verbose) printf("[eval.c:27]\tevaluating inside parens\n");
             eval(ex, j + 1, k - 1); //evaluate it
         }else{
             if(j >= 1 && isa(ex, j - 1) == 'f'){    //if the parens are preceded by a function...
+                if(verbose){
+                    printf("[eval.c:29]\tevaluating function: %s\n", ex->funcs[j - 1]);
+                    printf("\t\tpress return to continue...\n");
+                    getchar();
+                }
                 evalFunc(ex, j - 1);                //evaluate the function
+                updateParts(ex);
+                eval(ex, 0, ex->parts);
             }else{                                  //otherwise clear the parens
                 nullifycol(ex, j);
                 nullifycol(ex, k);
@@ -44,21 +56,133 @@ double eval(Expression *ex, int startcol, int endcol){
 }
 
 void evalFunc(Expression *ex, int col){
-    double result = NULL_DOUBLE;
-    if(strcmp(ex->funcs[col], "sin") == 0)
-        result = sin(ex->nums[col + 2]);
-    else if(strcmp(ex->funcs[col], "cos") == 0)
-        result = cos(ex->nums[col + 2]);
-    else if(strcmp(ex->funcs[col], "tan") == 0)
-        result = tan(ex->nums[col + 2]);
-    else if(strcmp(ex->funcs[col], "log") == 0)
-        result = log10(ex->nums[col + 2]);
+    double result = NULL_DOUBLE, arg = ex->nums[col + 2];
+    char *function = ex->funcs[col];
+    if(verbose){
+        printf("[eval.c:61]\trecieved function: %s\n", function);
+        printf("\t\tpress return to continue...\n");
+        getchar();
+    }
+    if(strcmp(function, "sin") == 0)
+        result = sin(arg);
+    else if(strcmp(function, "cos") == 0)
+        result = cos(arg);
+    else if(strcmp(function, "tan") == 0)
+        result = tan(arg);
+    else if(strcmp(function, "log") == 0)
+        result = log10(arg)/log10(logBase);
+    else if(strcmp(function, "ln") == 0)
+        result = log(arg);
+    else if(strcmp(function, "asin") == 0)
+        result = asin(arg);
+    else if(strcmp(function, "acos") == 0)
+        result = acos(arg);
+    else if(strcmp(function, "atan") == 0)
+        result = atan(arg);
+    else if(strcmp(function, "sqrt") == 0)
+        result = sqrt(arg);
+    else if(strcmp(function, "ceil") == 0)
+        result = ceil(arg);
+    else if(strcmp(function, "floor") == 0)
+        result = floor(arg);
+    else if(strcmp(function, "round") == 0)
+        result = round(arg);
+    else if(strcmp(function, "abs") == 0)
+        result = fabs(arg);
+    if(verbose){
+        printAsGrid(ex, "evalFunc", 92);
+        printf("press return to continue...\n");
+        getchar();
+    }
     nullifycol(ex, col);        //clear the function col 
     nullifycol(ex, col + 1);    //clear the open paren col
     nullifycol(ex, col + 2);    //clear the number col
     nullifycol(ex, col + 3);    //clear the close paren col
     ex->nums[col] = result;     //assign result to func col
+    if(verbose){
+        printAsGrid(ex, "evalFunc", 102);
+        printf("press return to continue...\n");
+        getchar();
+    }
     shiftLeft(ex);              //remove null cols
+    if(verbose){
+        printAsGrid(ex, "evalFunc", 108);
+        printf("press return to continue...\n");
+        getchar();
+    }
+}
+
+void settings(char *str){
+    str += 4;   //remove "set " from the string
+    char arg1[256], arg2[256];
+    int space1 = firstIndexOf(' ', str, 0);
+    if(space1 != -1){
+        snprintf(arg1, space1 + 1, "%s", str);
+        snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);
+    }else strcpy(arg1, str);
+    if(strcmp(arg1, "width") == 0){
+        printf("\tsetting window width to %s\n", arg2);
+        winWid = (int)str2dbl(arg2);
+        samewindow = 0;
+    }else if(strcmp(arg1, "height") == 0){
+        printf("\tsetting window height to %s\n", arg2);
+        winHgt = (int)str2dbl(arg2);
+        samewindow = 0;
+    }else if(strcmp(arg1, "color") == 0){
+        char arg3[256], arg4[256]; int space2;
+        str += 6;
+        space1 = firstIndexOf(' ', str, 0);
+        snprintf(arg2, space1 + 1, "%s", str);
+
+        space2 = firstIndexOf(' ', str, space1 + 1);
+        snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
+        
+        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
+        printf("\tsetting color to %s, %s, %s\n", arg2, arg3, arg4);
+        globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
+    }else if(strcmp(arg1, "window") == 0){
+        if(windowopen){
+            samewindow = (samewindow + 1) % 2;
+            printf("\tsetting 'new window' to %s\n", !samewindow?"on":"off");
+        }else{
+            printf("\terr: must have at least one window open\n");
+        }
+    }
+    else if(strcmp(arg1, "verbose") == 0){
+        verbose = (verbose + 1) % 2;
+        printf("\t turning verbose evaluation %s\n", verbose?"on":"off");
+    }
+    /*==Experimental:==
+    else if(strcmp(arg1, "xmin") == 0){
+        xmin = (int)str2dbl(arg2);
+    }else if(strcmp(arg1, "xmax") == 0){
+        xmax= (int)str2dbl(arg2);
+    }else if(strcmp(arg1, "ymin") == 0){
+        ymin = (int)str2dbl(arg2);
+    }else if(strcmp(arg1, "ymax") == 0){
+        ymax = (int)str2dbl(arg2);
+    }
+    */
+    else{
+        printf("\twindow width:\t|window height:\n");
+        printf("\t%d\t\t|%d\n", winWid, winHgt);
+        printf("\t================================\n");
+        printf("\tred:\t|green:\t|blue:\n");
+        printf("\t%d\t|%d\t|%d\n", globR, globG, globB);
+        printf("\t================================\n");
+        printf("\topen in new window:\n");
+        printf("\t%s\n", samewindow?"off":"on");
+    }
+}
+
+void help(void){
+    printf("edit settings with commands below (do not enter brackets):\n");
+    printf("\tset width [pixels]\n");
+    printf("\tset height[pixels]\n");
+    printf("\tset color [red] [green] [blue]\n");
+    printf("\tset window [no args; toggles plotting on same axes]\n");
+    printf("\tset [no args; shows current settings\n");
+    printf("\t'c' to clear screen, 'q' to quit program\n");
 }
 
 void evalOp(Expression *target, int col){
@@ -175,7 +299,7 @@ int validstr(char *str){
                 str[i + 1] != '.' && str[i + 1] != ')' && !isoperator(str[i + 1]) && str[i + 1] != '\0'){
             return 2;
         }
-        if(str[i] == ')' && i != len - 1 && !isoperator(str[i + 1])){
+        if(str[i] == ')' && i != len - 1 && !isoperator(str[i + 1]) && str[i + 1] != ')'){
             return 3;
         }
         if(str[i] == '(') openP++;
@@ -330,12 +454,12 @@ void parse(char *source, Expression *target){
     while(source[i] != '\0' && i < 256){       //until you reach the end of the string...
         if(isalpha(source[i]) && isalpha(source[i + 1])){//if it's a letter followed by letter-> func
             nullifycol(target, k);                      //start with a blank slate
-            j = firstIndexOf('(', source, i) - i;          //number of chars in func
+            j = firstIndexOf('(', source, i) - i;       //number of chars in func
             strncpy(target->funcs[k], &source[i], j);   //copy func string to target
-            target->funcs[k][3] = '\0';                 //add delimiting character
+            target->funcs[k][j] = '\0';                 //add delimiting character
             target->parts = k;                          //log that you've added a col
             k++;
-            i += 3;                                     //we already have these logged
+            i += j;                                     //we already have these logged
             continue;
         }
         if(isalpha(source[i])){     //now we're dealing with a variable

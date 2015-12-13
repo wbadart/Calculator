@@ -29,13 +29,13 @@ int main(int argc, char *argv[]){
                 parse(str, pe);
                 n = nvars(pe);
                 if(n == 1){
-	               plot(pe);
+	                plot(pe);
                 }else if(n > 1){
-                   printf("\terr: too many variables\n");
+                    printf("\terr: too many variables\n");
                 }else{
-                   printf("\t=%lf\n", eval(pe, 0, pe->parts));
+                    printf("\t=%lf\n", eval(pe, 0, pe->parts));
                 }
-             }
+            }
         }
         getInput(str);
     }
