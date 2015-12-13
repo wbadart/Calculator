@@ -543,7 +543,6 @@ void settings(char *str){
         snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
         
         snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
-        printf("%s %s %lf\n", arg2, arg3, str2dbl(arg4));
         globR2 = (int)str2dbl(arg2); globG2 = (int)str2dbl(arg3); globB2 = (int)str2dbl(arg4);
     }else if(strcmp(arg1, "window") == 0){
         if(windowopen){
@@ -573,6 +572,11 @@ void settings(char *str){
         else if((int)str2dbl(arg2) == 0) useGrad = 0;
         else useGrad = (useGrad + 1) % 2;
         if(verbose) printf("\tturning gradient %s\n", useGrad?"on":"off");
+    }else if(strcmp(arg1, "thick") == 0){
+        if((int)str2dbl(arg2) == 1) thick = 1;
+        else if((int)str2dbl(arg2) == 0) thick = 0;
+        else thick = (thick + 1) % 2;
+        if(verbose) printf("\tusing  %s line\n", thick?"thick":"thin");
     }
     /*==Experimental:==
     else if(strcmp(arg1, "xmin") == 0){
@@ -597,6 +601,8 @@ void settings(char *str){
         printf("\t================================\n");
         printf("\tplot gradient:\n");
         printf("\t%s\n", useGrad?"on":"off");
+        printf("\tplot line:\n");
+        printf("\t%s\n", thick?"thick":"thin");
         printf("\t================================\n");
         printf("\topen in new window:\n");
         printf("\t%s\n", samewindow?"off":"on");
@@ -644,6 +650,8 @@ void help(void){
     printf("\t                            args: 1 (plot in new window), 0 (plot in same window), none (toggle)\n");
     printf("\ttoggle verbose mode:    'set verbose [args]'\n");
     printf("\t                            args: 1 (on), 0 (off), none (toggle)\n");
+    printf("\tplot with thick line:   'set thick [args]'\n");
+    printf("\t                            args: 1 (thick line), 0 (thin line), none (toggle)\n");
     printf("\tchange base of 'log':   'set base [new base]'\n"); 
     printf("\tget settings from file: 'set file [filename]'\n");
     printf("\tdisplay settings:       'set'\n");

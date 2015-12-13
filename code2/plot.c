@@ -5,7 +5,7 @@ int globR = 255, globG = 255, globB = 255;
 int globR2 = 255, globG2 = 255, globB2 = 255;
 int samewindow = 0, windowopen = 0;
 int xmin = -10, xmax = 10, ymin = -10, ymax = 10;
-int useGrad = 0;
+int useGrad = 0, thick = 1;
 
 void plot(Expression *ex){
     int origVerbose = verbose;
@@ -31,6 +31,10 @@ void plot(Expression *ex){
         yval = plugin(ex, xval);
         ypxl = val2pix(yval, ymin, ymax, winHgt, 1);
         gfx_point(xpxl, ypxl);
+        if(thick){
+            gfx_point(xpxl, ypxl + 1);
+            gfx_point(xpxl, ypxl - 1);
+        }
     }
     gfx_flush();
     verbose = origVerbose;

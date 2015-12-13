@@ -5,7 +5,7 @@
 
 extern char operators[], settingsFile[];
 extern int winWid, winHgt, globR, globG, globB,
-       globR2, globG2, globB2,
+       globR2, globG2, globB2, thick,
        samewindow, windowopen, verbose,
        xmin, xmax, ymin, ymax, logBase, useGrad;
 
