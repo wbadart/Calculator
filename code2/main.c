@@ -3,12 +3,13 @@
 int main(int argc, char *argv[]){
     char str[256] = "0"; int n;
     Expression usrEx, *pe = &usrEx; setupEx(pe);
+    getSettings(settingsFile);
     if(argc > 1){
         strcpy(str, argv[1]);
         parse(str, pe);
         if(nvars(pe) > 0){
             plot(pe);
-            printf("\t...\n");
+            printf("\tpress return to continue...\n");
             getchar();
         }else printf("\t=%lf\n", eval(pe, 0, pe->parts));
     }else{

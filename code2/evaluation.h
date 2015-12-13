@@ -3,10 +3,10 @@
 #include <string.h>
 #include <ctype.h>
 
-extern char operators[];
+extern char operators[], settingsFile[];
 extern int winWid, winHgt, globR, globG, globB,
        samewindow, windowopen, verbose,
-       xmin, xmax, ymin, ymax;
+       xmin, xmax, ymin, ymax, logBase;
 
 //structure which holds expression data.
 //each "column" only contains 1 item, e.g. if nums[2]==3.14, ops[2]==NULL_CHAR
@@ -74,3 +74,5 @@ char isa(Expression *, int col);
 int nvars(Expression *);
 //determines if char is present in str
 int charinstr(char str[256], char, int);
+//read settings commands from file
+void getSettings(char *filename);

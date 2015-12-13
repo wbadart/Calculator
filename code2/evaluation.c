@@ -5,7 +5,7 @@
 
 char operators[] = "^*/+-%";
 int verbose = 0, logBase = 10;
-char *settingsFile = "settings.txt";
+char settingsFile[] = "settings.txt";
 
 /*=====Evaluation========================*/
 
@@ -13,24 +13,24 @@ double eval(Expression *ex, int startcol, int endcol){
     int i, n, j=-1, k; char c;
     double result;
     updateParts(ex);
-    if(verbose) printAsGrid(ex, "evaluation.c", 15);
+    if(verbose) printAsGrid(ex, "eval", 16);
     //base case: is there only one number left?
     if(ex->parts <= 1) return ex->nums[0];
 
     //next: evaluate parens
     n = hasparens(ex, startcol, endcol);
     if(n > 0){
-        if(verbose) printf("[eval.c:22]\texpression has parens\n");
+        if(verbose) printf("[eval:23]\texpression has parens\n");
         j = lastParen(ex, '(');
         k = firstParen(ex, ')');
         c = highestOp(ex, j, k);
         if(c != NULL_CHAR){         //if there's an expression inside the parens...
-            if(verbose) printf("[eval.c:27]\tevaluating inside parens\n");
+            if(verbose) printf("[eval:28]\tevaluating inside parens\n");
             eval(ex, j + 1, k - 1); //evaluate it
         }else{
             if(j >= 1 && isa(ex, j - 1) == 'f'){    //if the parens are preceded by a function...
                 if(verbose){
-                    printf("[eval.c:29]\tevaluating function: %s\n", ex->funcs[j - 1]);
+                    printf("[eval:33]\tevaluating function: %s\n", ex->funcs[j - 1]);
                     printf("\t\tpress return to continue...\n");
                     getchar();
                 }
@@ -58,11 +58,6 @@ double eval(Expression *ex, int startcol, int endcol){
 void evalFunc(Expression *ex, int col){
     double result = NULL_DOUBLE, arg = ex->nums[col + 2];
     char *function = ex->funcs[col];
-    if(verbose){
-        printf("[eval.c:61]\trecieved function: %s\n", function);
-        printf("\t\tpress return to continue...\n");
-        getchar();
-    }
     if(strcmp(function, "sin") == 0)
         result = sin(arg);
     else if(strcmp(function, "cos") == 0)
@@ -89,37 +84,24 @@ void evalFunc(Expression *ex, int col){
         result = round(arg);
     else if(strcmp(function, "abs") == 0)
         result = fabs(arg);
-    if(verbose){
-        printAsGrid(ex, "evalFunc", 92);
-        printf("press return to continue...\n");
-        getchar();
-    }
     nullifycol(ex, col);        //clear the function col 
     nullifycol(ex, col + 1);    //clear the open paren col
     nullifycol(ex, col + 2);    //clear the number col
     nullifycol(ex, col + 3);    //clear the close paren col
     ex->nums[col] = result;     //assign result to func col
-    if(verbose){
-        printAsGrid(ex, "evalFunc", 102);
-        printf("press return to continue...\n");
-        getchar();
-    }
     shiftLeft(ex);              //remove null cols
-    if(verbose){
-        printAsGrid(ex, "evalFunc", 108);
-        printf("press return to continue...\n");
-        getchar();
-    }
 }
 
 void settings(char *str){
     str += 4;   //remove "set " from the string
     char arg1[256], arg2[256];
     int space1 = firstIndexOf(' ', str, 0);
+    if(verbose) printf("[settings:119]\tcommand: %s\n", str);
     if(space1 != -1){
         snprintf(arg1, space1 + 1, "%s", str);
         snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);
     }else strcpy(arg1, str);
+    if(verbose) printf("[settings:124]\targ1:%s\targ2:%s\n", arg1, arg2);
     if(strcmp(arg1, "width") == 0){
         printf("\tsetting window width to %s\n", arg2);
         winWid = (int)str2dbl(arg2);
@@ -142,15 +124,24 @@ void settings(char *str){
         globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
     }else if(strcmp(arg1, "window") == 0){
         if(windowopen){
-            samewindow = (samewindow + 1) % 2;
-            printf("\tsetting 'new window' to %s\n", !samewindow?"on":"off");
+            if((int)str2dbl(arg2) == 1) samewindow = 0;
+            else if((int)str2dbl(arg2) == 0) samewindow = 1;
+            else samewindow = (samewindow + 1) % 2;
+            printf("\twill open plots in %s window\n", samewindow?"same":"new");
         }else{
-            printf("\terr: must have at least one window open\n");
+            printf("\terr: must have at least one window open to disable new window\n");
         }
-    }
-    else if(strcmp(arg1, "verbose") == 0){
-        verbose = (verbose + 1) % 2;
-        printf("\t turning verbose evaluation %s\n", verbose?"on":"off");
+    } else if(strcmp(arg1, "verbose") == 0){
+        if((int)str2dbl(arg2) == 1) verbose = 1;
+        else if((int)str2dbl(arg2) == 0) verbose = 0;
+        else verbose = (verbose + 1) % 2;
+        printf("\tturning verbose evaluation %s\n", verbose?"on":"off");
+    }else if(strcmp(arg1, "file") == 0){
+        strcpy(settingsFile, arg2);
+        getSettings(settingsFile);
+    }else if(strcmp(arg1, "base") == 0){
+        logBase = (int)str2dbl(arg2);
+        printf("\tsetting log base to %d\n", logBase);
     }
     /*==Experimental:==
     else if(strcmp(arg1, "xmin") == 0){
@@ -533,6 +524,7 @@ void getInput(char *target){
 
 void printEx(Expression *target){
     int i;
+    printf("\t");
     for(i = 0; i <= target->parts; i++){
         if(strcmp(target->funcs[i], NULL_STR) != 0){
             printf("%s", target->funcs[i]);
@@ -551,18 +543,21 @@ void printEx(Expression *target){
 
 void printAsGrid(Expression *ex, char *prog, int ln){
     int i;
-    printf("==>called from [%s:%d]=========================\n==>", prog, ln); printEx(ex);
-    printf("   |Num:\t| Func:\t| Op:\t| Paren:| Var:\n");
+    char dblstr[64];
+    printf("\t==>called from [%s:%d]===================\n", prog, ln); printEx(ex);
+    printf("\t   |Num:\t| Func:\t| Op:\t| Paren:| Var:\n");
     for(i = 0; i <= ex->parts; i++){
-        printf("%2d | %lf\t| %s\t| %c\t| %c\t| %c\n", i,
-                ex->nums[i]==NULL_DOUBLE?.1:ex->nums[i],
+        if(ex->nums[i] == NULL_DOUBLE) strcpy(dblstr, "\t");
+        else sprintf(dblstr, "%lf", ex->nums[i]);
+        printf("\t%2d | %s\t| %s\t| %c\t| %c\t| %c\n", i,
+                dblstr,
                 ex->funcs[i],
                 ex->ops[i]==NULL_CHAR?:ex->ops[i],
                 ex->parens[i]==NULL_CHAR?:ex->parens[i],
                 ex->vars[i]==NULL_CHAR?:ex->vars[i]
         );
     }
-    printf("==================================================\n\n");
+    printf("\t==================================================\n\n");
 }
 
 void errmsg(int n){
@@ -582,6 +577,25 @@ void errmsg(int n){
         case 5:
             printf("\terr: invalid expression\n");
             break;
+    }
+}
+
+void getSettings(char *filename){
+    FILE *fp; int i;
+    if(fp = fopen(filename, "r")){
+        char line[64];
+        while(!feof(fp)){
+            fgets(line, 64, fp);
+            for(i = 0; i <= strlen(line); i++){
+                if(line[i] == '\n') line[i] = '\0';
+            }
+            if(line[0] == 's') settings(line);
+        }
+    }else{
+        if(verbose){
+            printf("[getSettings:603] failed to read settings file\n");;
+            printf("\t\t  using stock defaults\n");
+        }
     }
 }
 

@@ -6,6 +6,8 @@ int samewindow = 0, windowopen = 0;
 int xmin = -10, xmax = 10, ymin = -10, ymax = 10;
 
 void plot(Expression *ex){
+    int origVerbose = verbose;
+    verbose = 0;
     if(!samewindow){
         windowopen = 1;
         gfx_open(winWid, winHgt, ex2str(ex));
@@ -22,6 +24,7 @@ void plot(Expression *ex){
         gfx_point(xpxl, ypxl);
     }
     gfx_flush();
+    verbose = origVerbose;
 }
 
 float plugin(Expression *ex, float val){
