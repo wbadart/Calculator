@@ -1,11 +1,10 @@
 #include "plot.h"
 
 int main(int argc, char *argv[]){
-    printf("\e[1;1H\e[2J\nWelcome to the TwIn-84\n");
     char str[256] = "0"; int n;
     Expression usrEx, *pe = &usrEx; setupEx(pe);
     getSettings(settingsFile);
-    if(argc > 1){
+    if(argc > 1){               //command line mode
         strcpy(str, argv[1]);
         parse(str, pe);
         if(nvars(pe) > 0){
@@ -13,7 +12,9 @@ int main(int argc, char *argv[]){
             printf("\tpress return to continue...\n");
             getchar();
         }else printf("\t=%lf\n", eval(pe, 0, pe->parts));
-    }else{
+    }else{                      //interactive mode
+        printf("\e[1;1H\e[2J");
+        printf("\e[1;1H\e[2J\nWelcome to the TwIn-84\n");
         help();
         getInput(str);
     }
