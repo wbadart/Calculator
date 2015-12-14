@@ -44,3 +44,19 @@ are parse, eval, plot, plugin, and settings.
 		equal to whatever the passed x value is and calls eval to get the 
 		resulting y value and returns it.
 	settings: 
+
+Since our program is designed to handle a wide variety of inputs, we had 
+to do a lot of testing.  We needed to make sure that each function (sin, 
+cos, log, etc.) yielded correct results.  It was pretty tricky to get the 
+order of operations to work correctly.  Once we had our basic expressions 
+and graphs coming out correctly, we added in the other settings.  So then 
+we had to see what happened if people entered invalid colors or values 
+other than those specified for each function.  At one point we found that 
+if we turned new window off, but then changed the color that the graph 
+would still open up in a new window.  So we had to try a whole bunch of 
+situations with changing the settings in different orders and making sure 
+that they still functioned correctly.  An easy way to test our program was 
+writing a shell file with a variety of inputs that tested proper 
+evaluation, order of operations, graphing ability and everything in 
+multiple ways.  I think that we did a very thorough job testing our 
+program and got results that we are happy with.
