@@ -3,11 +3,13 @@ Final Project Report
 December 13, 2015
 
 We created a calculator with graphing capabilities.  The user can simply 
-enter an expression he/she wishes to know the value of (eg. 5*6).  By typing 
-an expression with a variable in it (eg. 5*x), the program automatically 
-generates a graph in a new window.  There are a wide variety of settings
-the user can manipulate: window width and height, color of the graph,
-whether or not to put the next graph on the same set of axes or to open a
+enter an expression of arbitrary complexity he/she wishes to know the
+value of (eg. 5*6).  By typing an expression with a variable in it
+(eg. 5*x), the program automatically generates a graph in a new window.  
+
+There are a wide variety of settings the user can manipulate: window 
+width and height, color of the graph, whether or not to put the next
+graph on the same set of axes or to open a
 new window, whether or not to display the process of how calculations are
 made, and changing the base of log (the default is base 10). The
 instructions on how to change each of these settings are displayed in the
@@ -18,7 +20,8 @@ the settings to their default by typing 'set refresh'.
 
 We leveraged A LOT of functions in our program.  The most important ones 
 are parse, eval, plot, plugin, and settings.  
-	parse: takes a string and an Expression * as inputs. It 
+	parse: takes a string (source of data) and an Expression pointer
+		(target of data) as inputs. It 
 		reads through the string and analyzes whether certain 
 		chunks of it are numbers, variables, operators, 
 		functions, or parentheses and copies that information 
@@ -27,7 +30,8 @@ are parse, eval, plot, plugin, and settings.
 		ending point as inputs.  The start and end points are 
 		necessary because eval is recursive, so those are the 
 		conditions that are changed each time.  eval evaluates 
-		expressions.  So when the user types in an expression with out 
+		expressions by ananlyzing the order of the expression's operations.
+		So when the user types in an expression without 
 		any variables, eval works like normal.  If there is a variable, 
 		the program first goes to plot, which calls plugin, which calls 
 		eval.  So eval eventually gets called every time an expression 
@@ -43,7 +47,10 @@ are parse, eval, plot, plugin, and settings.
 		specified x value.  It sets the variable column of the expression 
 		equal to whatever the passed x value is and calls eval to get the 
 		resulting y value and returns it.
-	settings: 
+	settings: settings is called by main when the "set" command is
+		detected.  Using a combination of our function "firstIndexOf" and
+		sprintf, settings divides the input string on the spaces and
+		acts based on the determined arguments.
 
 Since our program is designed to handle a wide variety of inputs, we had 
 to do a lot of testing.  We needed to make sure that each function (sin, 
@@ -59,4 +66,5 @@ that they still functioned correctly.  An easy way to test our program was
 writing a shell file with a variety of inputs that tested proper 
 evaluation, order of operations, graphing ability and everything in 
 multiple ways.  I think that we did a very thorough job testing our 
-program and got results that we are happy with.
+program and got results that we are happy with. We suggest playing around
+with the gradient. You can get some pretty cool looking graphs!

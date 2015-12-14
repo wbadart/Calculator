@@ -198,6 +198,7 @@ char highestOp(Expression *ex, int start, int end){
 int validstr(char *str){
     int len = strlen(str), openP = 0, closeP = 0, i;
     int nums = 0, chars = 0;
+    if(verbose) printf("\tvalidating expression...\n");
     if(strcmp(str, "c") == 0 || strcmp(str, "q") == 0) return 0;
     for(i = 0; i < len; i++){
         if(isspace(str[i])){
@@ -217,6 +218,7 @@ int validstr(char *str){
     }
     if(openP != closeP) return 4;
     if(nums + openP + closeP == 0) return 5;
+    if(verbose) printf("\tstring valid\n");
     return 0;
 }
 
@@ -360,7 +362,13 @@ double str2dbl(char *str){
 void parse(char *source, Expression *target){
     int i = 0, k = 0, j = 0;
     char tmpstr[256];
+    if(verbose){
+        printf("\tparsing expression...\n");
+        printf("\tpress return to continue...\n");
+        getchar();
+    }
     while(source[i] != '\0' && i < 256){       //until you reach the end of the string...
+        if(verbose) printf("\texamining >%c< @ %d\n", source[i], i);
         if(isalpha(source[i]) && isalpha(source[i + 1])){//if it's a letter followed by letter-> func
             nullifycol(target, k);                      //start with a blank slate
             j = firstIndexOf('(', source, i) - i;       //number of chars in func
@@ -388,8 +396,8 @@ void parse(char *source, Expression *target){
             continue;
         }
         if(isoperator(source[i]) && (
-                    isdigit(source[i - 1]) ||
-                    source[i - 1] == ')' ||
+                    isa(target, k - 1) == 'n' ||
+                    target->parens[k - 1] == ')' ||
                     isa(target, k - 1) == 'v')){
             nullifycol(target, k);
             target->ops[k] = source[i];                 //tracking operators
@@ -415,6 +423,7 @@ void parse(char *source, Expression *target){
         }
     }
     nullifycol(target, k);
+    if(verbose) printAsGrid(target, "parse", 424);
 }
 
 void setupEx(Expression *target){       //this is needed for the base case of recusive evaluation
