@@ -17,7 +17,7 @@ in it and have the program read them in.  Lastly, the user can reset all
 the settings to their default by typing 'set refresh'. 
 
 We leveraged A LOT of functions in our program.  The most important ones 
-are parse, eval, getSettings, plot, and plugin.  
+are parse, eval, plot, plugin, and settings.  
 	parse: takes a string and an Expression * as inputs. It 
 		reads through the string and analyzes whether certain 
 		chunks of it are numbers, variables, operators, 
@@ -26,4 +26,21 @@ are parse, eval, getSettings, plot, and plugin.
 	eval: takes an Expression *, a starting point and an 
 		ending point as inputs.  The start and end points are 
 		necessary because eval is recursive, so those are the 
-		conditions that are changed each time.  eval 
+		conditions that are changed each time.  eval evaluates 
+		expressions.  So when the user types in an expression with out 
+		any variables, eval works like normal.  If there is a variable, 
+		the program first goes to plot, which calls plugin, which calls 
+		eval.  So eval eventually gets called every time an expression 
+		is entered.
+	plot: plot is called from main if the number of variables (n) in 
+		Expression ex is 1.  Plot considers all the settings options then 
+		(depending on the settings) opens a new window and calls on 
+		drawAxes.  In order to draw the actual function, the color is set 
+		based off of the default (white) or user input.  The functions 
+		pix2val and val2pix convert the x and y pixel values into the 
+		appropriate function values and vice versa.  
+	plugin: is called from the plot function to obtain the y value for a 
+		specified x value.  It sets the variable column of the expression 
+		equal to whatever the passed x value is and calls eval to get the 
+		resulting y value and returns it.
+	settings: 
