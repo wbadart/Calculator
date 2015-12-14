@@ -1,0 +1,4 @@
+set verbose 1
+set color 0 255 255
+set width 400
+set height 300

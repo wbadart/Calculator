@@ -1,0 +1,6 @@
+set verbose 0
+set grad 1
+set color 255 255 0
+set color2 0 230 100
+set width 900
+set height 600

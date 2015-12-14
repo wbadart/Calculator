@@ -182,6 +182,7 @@ int countFuncs(Expression *ex, int start, int end){
 
 char highestOp(Expression *ex, int start, int end){
     int i, j;
+    //printf("lib.c:83 searching (%d, %d)\n", start, end);
     for(i = 0; i < strlen(operators); i++){ //operators is in order of op. so we start @ 0
         for(j = start; j <= end; j++){
             if(operators[i] == ex->ops[j]) return ex->ops[j];
@@ -216,7 +217,7 @@ int validstr(char *str){
         if(isalpha(str[i])) chars++;
     }
     if(openP != closeP) return 4;
-    if(nums + openP + closeP == 0 && strcmp(str, "pi") != 0 && strcmp(str, "e") != 0) return 5;
+    if(nums + openP + closeP == 0) return 5;
     if(verbose) printf("\tstring valid\n");
     return 0;
 }
@@ -359,27 +360,17 @@ double str2dbl(char *str){
 }
 
 void parse(char *source, Expression *target){
-    int i = 0, k = 0, j = 0, innerCTD = 0;
+    int i = 0, k = 0, j = 0;
     char tmpstr[256];
     if(verbose){
-        printf("\tparsing expression ==>%s<==\n", source);
+        printf("\tparsing expression...\n");
         printf("\tpress return to continue...\n");
         getchar();
     }
     while(source[i] != '\0' && i < 256){       //until you reach the end of the string...
-        if(verbose){
-            printf("\texamining >%c< @ %d\n", source[i], i);
-            getchar();
-        }
-        innerCTD = 0;
+        if(verbose) printf("\texamining >%c< @ %d\n", source[i], i);
         if(isalpha(source[i]) && isalpha(source[i + 1])){//if it's a letter followed by letter-> func
             nullifycol(target, k);                      //start with a blank slate
-            if(source[i] == 'p' && source[i + 1] == 'i'){
-                target->nums[k] = M_PI;
-                k++;
-                i += 2;
-                continue;
-            }
             j = firstIndexOf('(', source, i) - i;       //number of chars in func
             strncpy(target->funcs[k], &source[i], j);   //copy func string to target
             target->funcs[k][j] = '\0';                 //add delimiting character
@@ -390,12 +381,6 @@ void parse(char *source, Expression *target){
         }
         if(isalpha(source[i])){     //now we're dealing with a variable
             nullifycol(target, k);
-            if(source[i] == 'e' && !isalpha(source[i + 1]) && !isalpha(source[i - 1])){
-                target->nums[k] = M_E;
-                k++;
-                i++;
-                continue;
-            }
             target->vars[k] = source[i];
             target->parts = k;
             k++;
@@ -532,11 +517,11 @@ void settings(char *str){
     char arg1[256], arg2[256];
     int space1 = firstIndexOf(' ', str, 0);
     if(verbose) printf("[settings:119]\tcommand: %s\n", str);
-    if(space1 != -1){   //if more than 1 argument was passed...
-        snprintf(arg1, space1 + 1, "%s", str);  //1st arg is 1st word after "set"
-        snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);  //2nd arg is everything else
+    if(space1 != -1){
+        snprintf(arg1, space1 + 1, "%s", str);
+        snprintf(arg2, strlen(str) - space1,  "%s", str + space1 + 1);
     }else strcpy(arg1, str);
-    if(verbose) printf("[settings:539]\targ1:%s\targ2:%s\n", arg1, arg2);
+    if(verbose) printf("[settings:124]\targ1:%s\targ2:%s\n", arg1, arg2);
     if(strcmp(arg1, "width") == 0){
         if(verbose) printf("\tsetting window width to %s\n", arg2);
         winWid = (int)str2dbl(arg2);
@@ -547,18 +532,17 @@ void settings(char *str){
         samewindow = 0;
     }else if(strcmp(arg1, "color") == 0){
         char arg3[256], arg4[256]; int space2;
-        str += 6;   //remove "color " from string
-        space1 = firstIndexOf(' ', str, 0);     //this space separates 1st 2 vals
-        snprintf(arg2, space1 + 1, "%s", str);  //copies from index 0 to space + 1
+        str += 6;
+        space1 = firstIndexOf(' ', str, 0);
+        snprintf(arg2, space1 + 1, "%s", str);
 
-        space2 = firstIndexOf(' ', str, space1 + 1);    //this space separates the 2nd 2 vals
+        space2 = firstIndexOf(' ', str, space1 + 1);
         snprintf(arg3, space2 - space1, "%s", str + space1 + 1);
         
-        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1); //everything else is the 3rd val
-
+        snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
         if(verbose) printf("\tsetting color to %s, %s, %s\n", arg2, arg3, arg4);
         globR = (int)str2dbl(arg2); globG = (int)str2dbl(arg3); globB = (int)str2dbl(arg4);
-    }else if(strcmp(arg1, "color2") == 0){  //same as above but for secondary colors
+    }else if(strcmp(arg1, "color2") == 0){
         char arg3[256], arg4[256]; int space2;
         str += 7;
         space1 = firstIndexOf(' ', str, 0);
@@ -569,8 +553,8 @@ void settings(char *str){
         
         snprintf(arg4, strlen(str) - space2, "%s", str + space2 + 1);
         globR2 = (int)str2dbl(arg2); globG2 = (int)str2dbl(arg3); globB2 = (int)str2dbl(arg4);
-    }else if(strcmp(arg1, "window") == 0){  //toggle new window
-        if(windowopen){ //you should be able to disable this w/o existing window
+    }else if(strcmp(arg1, "window") == 0){
+        if(windowopen){
             if((int)str2dbl(arg2) == 1) samewindow = 0;
             else if((int)str2dbl(arg2) == 0) samewindow = 1;
             else samewindow = (samewindow + 1) % 2;
